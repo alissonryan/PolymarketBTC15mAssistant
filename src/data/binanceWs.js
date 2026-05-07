@@ -18,6 +18,7 @@ export function startBinanceTradeStream({ symbol = CONFIG.symbol, onUpdate } = {
   let reconnectMs = 500;
   let lastPrice = null;
   let lastTs = null;
+  let lastTrade = null;
 
   const connect = () => {
     if (closed) return;
@@ -36,7 +37,8 @@ export function startBinanceTradeStream({ symbol = CONFIG.symbol, onUpdate } = {
         if (p === null) return;
         lastPrice = p;
         lastTs = Date.now();
-        if (typeof onUpdate === "function") onUpdate({ price: lastPrice, ts: lastTs });
+        lastTrade = { p: msg.p, q: msg.q, m: msg.m, T: msg.T, price: p, ts: lastTs };
+        if (typeof onUpdate === "function") onUpdate(lastTrade);
       } catch {
         return;
       }
@@ -63,7 +65,7 @@ export function startBinanceTradeStream({ symbol = CONFIG.symbol, onUpdate } = {
 
   return {
     getLast() {
-      return { price: lastPrice, ts: lastTs };
+      return lastTrade ?? { price: lastPrice, ts: lastTs };
     },
     close() {
       closed = true;

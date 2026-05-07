@@ -10,7 +10,11 @@ export function scoreDirection(inputs) {
     macd,
     heikenColor,
     heikenCount,
-    failedVwapReclaim
+    failedVwapReclaim,
+    cvdTrend,
+    cvdDivergence,
+    cvdAbsorption,
+    tpField
   } = inputs;
 
   let up = 1;
@@ -31,7 +35,7 @@ export function scoreDirection(inputs) {
     if (rsi < 45 && rsiSlope < 0) down += 2;
   }
 
-  if (macd?.hist !== null && macd?.histDelta !== null) {
+  if (macd != null && macd.hist != null && macd.histDelta != null) {
     const expandingGreen = macd.hist > 0 && macd.histDelta > 0;
     const expandingRed = macd.hist < 0 && macd.histDelta < 0;
     if (expandingGreen) up += 2;
@@ -47,6 +51,25 @@ export function scoreDirection(inputs) {
   }
 
   if (failedVwapReclaim === true) down += 3;
+
+  // CVD trend
+  if (cvdTrend === "BUYING") up += 1;
+  if (cvdTrend === "SELLING") down += 1;
+
+  // CVD divergence (high-conviction signal)
+  if (cvdDivergence?.type === "BULLISH") up += 2;
+  if (cvdDivergence?.type === "BEARISH") down += 2;
+
+  // CVD absorption (price flat but strong order flow)
+  if (cvdAbsorption?.type === "BULLISH_ABSORPTION") up += 1;
+  if (cvdAbsorption?.type === "BEARISH_ABSORPTION") down += 1;
+
+  // Time-Price Convergence (late-window high-probability signal)
+  if (tpField?.inField) {
+    const boost = tpField.probability > 0.8 ? 3 : tpField.probability > 0.7 ? 2 : 1;
+    if (tpField.direction === "UP") up += boost;
+    if (tpField.direction === "DOWN") down += boost;
+  }
 
   const rawUp = up / (up + down);
   return { upScore: up, downScore: down, rawUp };

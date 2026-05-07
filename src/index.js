@@ -23,6 +23,9 @@ import { appendCsvRow, formatNumber, formatPct, getCandleWindowTiming, sleep } f
 import { startBinanceTradeStream } from "./data/binanceWs.js";
 import { onSignal, emergencyShutdown, getBotStatus } from "./execution/bot.js";
 import { onPaperTick, getPaperStats, getPaperPosition, hasPaperPosition } from "./execution/paperTrading.js";
+import { CVDAnalyzer } from "./indicators/cvd.js";
+import { TimePriceConvergence } from "./engines/timePriceField.js";
+import { LockStrategy } from "./engines/lockStrategy.js";
 import fs from "node:fs";
 import path from "node:path";
 import readline from "node:readline";
@@ -331,7 +334,14 @@ async function fetchPolymarketSnapshot() {
 }
 
 async function main() {
-  const binanceStream = startBinanceTradeStream({ symbol: CONFIG.symbol });
+  const cvdAnalyzer = new CVDAnalyzer({ resetInterval: "1h" });
+  const timePriceConv = new TimePriceConvergence({ minTimeRatio: 0.2, baseThreshold: 0.001, multiplier: 5 });
+  const lockStrategy = new LockStrategy({ maxCostPerPair: 0.99, minProfit: 0.01, onlyInChop: true });
+
+  const binanceStream = startBinanceTradeStream({
+    symbol: CONFIG.symbol,
+    onUpdate: (trade) => cvdAnalyzer.processTrade(trade)
+  });
   const polymarketLiveStream = startPolymarketChainlinkPriceStream({});
   const chainlinkStream = startChainlinkPriceStream({});
 
@@ -422,6 +432,33 @@ async function main() {
         volumeAvg
       });
 
+      const marketUp = poly.ok ? poly.prices.up : null;
+      const marketDown = poly.ok ? poly.prices.down : null;
+
+      // Spot price and priceToBeat — needed by TPC and Lock before scoring
+      const spotPrice = wsPrice ?? lastPrice;
+      const currentPrice = chainlink?.price ?? null;
+      const marketSlug = poly.ok ? String(poly.market?.slug ?? "") : "";
+      const marketStartMs = poly.ok && poly.market?.eventStartTime ? new Date(poly.market.eventStartTime).getTime() : null;
+
+      if (marketSlug && priceToBeatState.slug !== marketSlug) {
+        priceToBeatState = { slug: marketSlug, value: null, setAtMs: null };
+      }
+      if (priceToBeatState.slug && priceToBeatState.value === null && currentPrice !== null) {
+        const nowMs = Date.now();
+        if (marketStartMs === null || nowMs >= marketStartMs) {
+          priceToBeatState = { slug: priceToBeatState.slug, value: Number(currentPrice), setAtMs: nowMs };
+        }
+      }
+      const priceToBeat = priceToBeatState.slug === marketSlug ? priceToBeatState.value : null;
+
+      // Advanced signals (needs marketUp/Down and spotPrice/priceToBeat)
+      const cvdState = cvdAnalyzer.getCurrentState();
+      const cvdDivergence = cvdAnalyzer.detectDivergence();
+      const cvdAbsorption = cvdAnalyzer.detectAbsorption();
+      const tpField = timePriceConv.evaluate(spotPrice, priceToBeat, timeLeftMin, CONFIG.candleWindowMinutes);
+      const lockOp = lockStrategy.evaluate(marketUp, marketDown, regimeInfo.regime);
+
       const scored = scoreDirection({
         price: lastPrice,
         vwap: vwapNow,
@@ -431,13 +468,15 @@ async function main() {
         macd,
         heikenColor: consec.color,
         heikenCount: consec.count,
-        failedVwapReclaim
+        failedVwapReclaim,
+        cvdTrend: cvdState.trend,
+        cvdDivergence,
+        cvdAbsorption,
+        tpField
       });
 
       const timeAware = applyTimeAwareness(scored.rawUp, timeLeftMin, CONFIG.candleWindowMinutes);
 
-      const marketUp = poly.ok ? poly.prices.up : null;
-      const marketDown = poly.ok ? poly.prices.down : null;
       const edge = computeEdge({ modelUp: timeAware.adjustedUp, modelDown: timeAware.adjustedDown, marketYes: marketUp, marketNo: marketDown });
 
       const rec = decide({ remainingMinutes: timeLeftMin, edgeUp: edge.edgeUp, edgeDown: edge.edgeDown, modelUp: timeAware.adjustedUp, modelDown: timeAware.adjustedDown, regime: regimeInfo.regime });
@@ -505,24 +544,6 @@ async function main() {
         ? (Number(poly.market?.liquidityNum) || Number(poly.market?.liquidity) || null)
         : null;
 
-      const spotPrice = wsPrice ?? lastPrice;
-      const currentPrice = chainlink?.price ?? null;
-      const marketSlug = poly.ok ? String(poly.market?.slug ?? "") : "";
-      const marketStartMs = poly.ok && poly.market?.eventStartTime ? new Date(poly.market.eventStartTime).getTime() : null;
-
-      if (marketSlug && priceToBeatState.slug !== marketSlug) {
-        priceToBeatState = { slug: marketSlug, value: null, setAtMs: null };
-      }
-
-      if (priceToBeatState.slug && priceToBeatState.value === null && currentPrice !== null) {
-        const nowMs = Date.now();
-        const okToLatch = marketStartMs === null ? true : nowMs >= marketStartMs;
-        if (okToLatch) {
-          priceToBeatState = { slug: priceToBeatState.slug, value: Number(currentPrice), setAtMs: nowMs };
-        }
-      }
-
-      const priceToBeat = priceToBeatState.slug === marketSlug ? priceToBeatState.value : null;
       const currentPriceBaseLine = colorPriceLine({
         label: "CURRENT PRICE",
         price: currentPrice,
@@ -595,6 +616,26 @@ async function main() {
               : ANSI.reset)
         : ANSI.reset;
 
+      // CVD display
+      const cvdTrendColor = cvdState.trend === "BUYING" ? ANSI.green : cvdState.trend === "SELLING" ? ANSI.red : ANSI.gray;
+      const cvdDivLine = cvdDivergence
+        ? ` | ${cvdDivergence.type === "BULLISH" ? ANSI.green + "div↑" : ANSI.red + "div↓"}${ANSI.reset}`
+        : "";
+      const cvdAbsLine = cvdAbsorption
+        ? ` | ${cvdAbsorption.type === "BULLISH_ABSORPTION" ? ANSI.green + "abs↑" : ANSI.red + "abs↓"}${ANSI.reset}`
+        : "";
+      const cvdDisplayLine = kv("CVD:", `${cvdTrendColor}${cvdState.trend}${ANSI.reset}${cvdDivLine}${cvdAbsLine}`);
+
+      // TPC display
+      const tpLine = tpField.inField
+        ? kv("TPC:", `${tpField.direction === "UP" ? ANSI.green : ANSI.red}${tpField.direction} ${(tpField.probability * 100).toFixed(0)}% [${tpField.urgency}]${ANSI.reset}`)
+        : null;
+
+      // Lock display
+      const lockLine = lockOp.actionable
+        ? kv("LOCK:", `${ANSI.yellow}BOTH sides | cost ${lockOp.costPerPair?.toFixed(3)} | +${(lockOp.profit * 100).toFixed(1)}% guaranteed${ANSI.reset}`)
+        : null;
+
       const lines = [
         titleLine,
         marketLine,
@@ -608,6 +649,9 @@ async function main() {
         kv("MACD:", macdLine.split(": ").slice(1).join(": ") || macdLine),
         kv("Delta 1/3:", deltaLine.split(": ").slice(1).join(": ") || deltaLine),
         kv("VWAP:", vwapLine.split(": ").slice(1).join(": ") || vwapLine),
+        cvdDisplayLine,
+        tpLine,
+        lockLine,
         "",
         sepLine(),
         "",
