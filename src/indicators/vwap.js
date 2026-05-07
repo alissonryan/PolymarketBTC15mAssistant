@@ -14,9 +14,13 @@ export function computeSessionVwap(candles) {
 
 export function computeVwapSeries(candles) {
   const series = [];
-  for (let i = 0; i < candles.length; i += 1) {
-    const sub = candles.slice(0, i + 1);
-    series.push(computeSessionVwap(sub));
+  let cumulativePV = 0;
+  let cumulativeV = 0;
+  for (const c of candles) {
+    const tp = (c.high + c.low + c.close) / 3;
+    cumulativePV += tp * c.volume;
+    cumulativeV += c.volume;
+    series.push(cumulativeV === 0 ? null : cumulativePV / cumulativeV);
   }
   return series;
 }

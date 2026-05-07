@@ -35,3 +35,12 @@ export function slopeLast(values, points) {
   const last = slice[slice.length - 1];
   return (last - first) / (points - 1);
 }
+
+export function computeRsiSeries(closes, period, count) {
+  const results = [];
+  for (let i = Math.max(period, closes.length - count); i < closes.length; i += 1) {
+    const r = computeRsi(closes.slice(i - period, i + 1), period);
+    if (r !== null) results.push(r);
+  }
+  return results;
+}

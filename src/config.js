@@ -1,3 +1,6 @@
+const _window = Number(process.env.CANDLE_WINDOW_MINUTES) || 15;
+const _is5m = _window === 5;
+
 export const CONFIG = {
   symbol: "BTCUSDT",
   binanceBaseUrl: "https://api.binance.com",
@@ -5,7 +8,8 @@ export const CONFIG = {
   clobBaseUrl: "https://clob.polymarket.com",
 
   pollIntervalMs: 1_000,
-  candleWindowMinutes: 15,
+  marketCacheMs: 3 * 60 * 1_000,
+  candleWindowMinutes: _window,
 
   vwapSlopeLookbackMinutes: 5,
   rsiPeriod: 14,
@@ -17,8 +21,8 @@ export const CONFIG = {
 
   polymarket: {
     marketSlug: process.env.POLYMARKET_SLUG || "",
-    seriesId: process.env.POLYMARKET_SERIES_ID || "10192",
-    seriesSlug: process.env.POLYMARKET_SERIES_SLUG || "btc-up-or-down-15m",
+    seriesId: process.env.POLYMARKET_SERIES_ID || (_is5m ? "10684" : "10192"),
+    seriesSlug: process.env.POLYMARKET_SERIES_SLUG || (_is5m ? "btc-up-or-down-5m" : "btc-up-or-down-15m"),
     autoSelectLatest: (process.env.POLYMARKET_AUTO_SELECT_LATEST || "true").toLowerCase() === "true",
     liveDataWsUrl: process.env.POLYMARKET_LIVE_WS_URL || "wss://ws-live-data.polymarket.com",
     upOutcomeLabel: process.env.POLYMARKET_UP_LABEL || "Up",

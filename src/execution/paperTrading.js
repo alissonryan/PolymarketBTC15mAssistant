@@ -1,0 +1,217 @@
+import fs from "node:fs";
+import path from "node:path";
+import { canTrade } from "../risk/guard.js";
+
+const POSITION_FILE = path.join(process.cwd(), "logs", "paper_position.json");
+const HISTORY_FILE  = path.join(process.cwd(), "logs", "paper_trades.json");
+
+// Preço da Binance latched no início de cada janela de mercado
+// Usado em vez do Chainlink (que pode ficar congelado por horas em baixa volatilidade)
+let _paperPtbSlug = null;
+let _paperPtbPrice = null;
+
+const EMPTY_POSITION = {
+  open: false,
+  side: null,
+  entryPrice: null,
+  usdcAmount: null,
+  priceToBeat: null,
+  marketSlug: null,
+  enteredAt: null,
+  edgeAtEntry: null
+};
+
+// ─── persistência ────────────────────────────────────────────────────────────
+
+function ensureDir(file) {
+  fs.mkdirSync(path.dirname(file), { recursive: true });
+}
+
+function loadJson(file, fallback) {
+  try {
+    if (fs.existsSync(file)) return JSON.parse(fs.readFileSync(file, "utf8"));
+  } catch { /* ignore */ }
+  return fallback;
+}
+
+function saveJson(file, data) {
+  ensureDir(file);
+  fs.writeFileSync(file, JSON.stringify(data, null, 2), "utf8");
+}
+
+// ─── estado em memória ───────────────────────────────────────────────────────
+
+let _pos = loadJson(POSITION_FILE, { ...EMPTY_POSITION });
+
+function savePos() { saveJson(POSITION_FILE, _pos); }
+
+// ─── histórico ───────────────────────────────────────────────────────────────
+
+function loadHistory() {
+  return loadJson(HISTORY_FILE, { trades: [] });
+}
+
+function appendTrade(trade) {
+  const h = loadHistory();
+  h.trades.push(trade);
+  saveJson(HISTORY_FILE, h);
+}
+
+// ─── cálculo de P&L ──────────────────────────────────────────────────────────
+
+// Prediction market payout:
+//   Comprou UP a 0.65 e ganhou → recebe 1 USDC por share → pnl = amount*(1/price - 1)
+//   Comprou UP a 0.65 e perdeu → recebe 0                → pnl = -amount
+function calcPnl(usdcAmount, entryPrice, won) {
+  if (won) return parseFloat((usdcAmount * (1 / entryPrice - 1)).toFixed(4));
+  return -usdcAmount;
+}
+
+// ─── API pública ─────────────────────────────────────────────────────────────
+
+export function hasPaperPosition() {
+  return _pos.open === true;
+}
+
+export function getPaperPosition() {
+  return { ..._pos };
+}
+
+// Chamado a cada tick do loop principal
+// spotPrice = preço Binance WebSocket (sempre atualizado, nunca congela)
+export function onPaperTick({ rec, poly, spotPrice, timeLeftMin }) {
+  const marketSlug = poly.ok ? (poly.market?.slug ?? null) : null;
+
+  // ── Latch do preço Binance no início de cada janela ───────────────────────
+  if (marketSlug && marketSlug !== _paperPtbSlug) {
+    _paperPtbSlug = marketSlug;
+    _paperPtbPrice = spotPrice ?? null;
+  }
+
+  // ── 1. Detecta liquidação: mercado mudou de slug ──────────────────────────
+  if (_pos.open && marketSlug && _pos.marketSlug && _pos.marketSlug !== marketSlug) {
+    // spotPrice = preço Binance no início da nova janela ≈ fim da janela anterior
+    _settlePosition(spotPrice);
+  }
+
+  // ── 2. Sem posição aberta: avalia entrada ─────────────────────────────────
+  if (!_pos.open) {
+    if (rec.action !== "ENTER" || !poly.ok || !poly.tokens) {
+      return { mode: "waiting", reason: rec.reason ?? rec.phase };
+    }
+
+    if (!spotPrice) {
+      return { mode: "waiting", reason: "spot_price_indisponivel" };
+    }
+
+    const orderSize = Number(process.env.RISK_ORDER_SIZE_USDC ?? 5);
+    const entryPrice = rec.side === "UP" ? poly.prices?.up : poly.prices?.down;
+
+    if (!entryPrice || entryPrice <= 0) {
+      return { mode: "waiting", reason: "preco_polymarket_indisponivel" };
+    }
+
+    const edgeBest = rec.edge ?? 0;
+    const risk = canTrade({ openPositions: 0, edgeBest });
+    if (!risk.allowed) {
+      return { mode: "blocked", reason: risk.reason };
+    }
+
+    _pos = {
+      open: true,
+      side: rec.side,
+      entryPrice,
+      usdcAmount: orderSize,
+      priceToBeat: _paperPtbPrice,   // preço Binance no início da janela
+      marketSlug,
+      enteredAt: new Date().toISOString(),
+      edgeAtEntry: edgeBest
+    };
+    savePos();
+
+    return { mode: "entered", side: rec.side, usdcAmount: orderSize, entryPrice };
+  }
+
+  // ── 3. Posição aberta: retorna mark-to-market ─────────────────────────────
+  const side = _pos.side === "UP" ? "up" : "down";
+  const currentMarketPrice = poly.ok ? (poly.prices?.[side] ?? null) : null;
+  const unrealizedPnl = currentMarketPrice
+    ? _pos.usdcAmount * currentMarketPrice / (_pos.entryPrice ?? currentMarketPrice) - _pos.usdcAmount
+    : null;
+
+  return { mode: "holding", position: _pos, unrealizedPnl };
+}
+
+function _settlePosition(settlementChainlinkPrice) {
+  const won = _determineWinner(_pos.side, _pos.priceToBeat, settlementChainlinkPrice);
+  const pnl = calcPnl(_pos.usdcAmount, _pos.entryPrice, won);
+
+  const trade = {
+    side:             _pos.side,
+    entryPrice:       _pos.entryPrice,
+    usdcAmount:       _pos.usdcAmount,
+    priceToBeat:      _pos.priceToBeat,
+    settlementPrice:  settlementChainlinkPrice,
+    won,
+    pnl,
+    edgeAtEntry:      _pos.edgeAtEntry,
+    marketSlug:       _pos.marketSlug,
+    enteredAt:        _pos.enteredAt,
+    settledAt:        new Date().toISOString()
+  };
+
+  appendTrade(trade);
+
+  console.log(
+    `[paper] ${won ? "✅ WIN" : "❌ LOSS"} | ${_pos.side} @ ${_pos.entryPrice} | ` +
+    `ptb: ${_pos.priceToBeat?.toFixed(2)} → ${settlementChainlinkPrice?.toFixed(2)} | ` +
+    `P&L: ${pnl >= 0 ? "+" : ""}$${pnl.toFixed(2)}`
+  );
+
+  _pos = { ...EMPTY_POSITION };
+  savePos();
+}
+
+function _determineWinner(side, priceToBeat, settlementPrice) {
+  if (priceToBeat === null || settlementPrice === null) return false;
+  if (side === "UP") return settlementPrice > priceToBeat;
+  if (side === "DOWN") return settlementPrice < priceToBeat;
+  return false;
+}
+
+// ─── estatísticas ─────────────────────────────────────────────────────────────
+
+export function getPaperStats() {
+  const { trades } = loadHistory();
+
+  if (trades.length === 0) {
+    return {
+      totalTrades: 0, wins: 0, losses: 0, winRate: null,
+      totalPnl: 0, avgPnl: null, bestTrade: null, worstTrade: null,
+      roi: null
+    };
+  }
+
+  const wins   = trades.filter(t => t.won).length;
+  const losses = trades.length - wins;
+  const totalPnl  = parseFloat(trades.reduce((a, t) => a + t.pnl, 0).toFixed(4));
+  const totalRisked = trades.reduce((a, t) => a + t.usdcAmount, 0);
+  const pnls   = trades.map(t => t.pnl);
+
+  return {
+    totalTrades: trades.length,
+    wins,
+    losses,
+    winRate:    parseFloat((wins / trades.length * 100).toFixed(1)),
+    totalPnl,
+    avgPnl:     parseFloat((totalPnl / trades.length).toFixed(4)),
+    bestTrade:  parseFloat(Math.max(...pnls).toFixed(4)),
+    worstTrade: parseFloat(Math.min(...pnls).toFixed(4)),
+    roi:        parseFloat((totalPnl / totalRisked * 100).toFixed(2))
+  };
+}
+
+export function getLastTrades(n = 5) {
+  const { trades } = loadHistory();
+  return trades.slice(-n);
+}

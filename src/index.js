@@ -12,8 +12,8 @@ import {
   fetchOrderBook,
   summarizeOrderBook
 } from "./data/polymarket.js";
-import { computeSessionVwap, computeVwapSeries } from "./indicators/vwap.js";
-import { computeRsi, sma, slopeLast } from "./indicators/rsi.js";
+import { computeVwapSeries } from "./indicators/vwap.js";
+import { computeRsi, computeRsiSeries, sma, slopeLast } from "./indicators/rsi.js";
 import { computeMacd } from "./indicators/macd.js";
 import { computeHeikenAshi, countConsecutive } from "./indicators/heikenAshi.js";
 import { detectRegime } from "./engines/regime.js";
@@ -21,6 +21,8 @@ import { scoreDirection, applyTimeAwareness } from "./engines/probability.js";
 import { computeEdge, decide } from "./engines/edge.js";
 import { appendCsvRow, formatNumber, formatPct, getCandleWindowTiming, sleep } from "./utils.js";
 import { startBinanceTradeStream } from "./data/binanceWs.js";
+import { onSignal, emergencyShutdown, getBotStatus } from "./execution/bot.js";
+import { onPaperTick, getPaperStats, getPaperPosition, hasPaperPosition } from "./execution/paperTrading.js";
 import fs from "node:fs";
 import path from "node:path";
 import readline from "node:readline";
@@ -198,16 +200,6 @@ function getBtcSession(now = new Date()) {
   return "Off-hours";
 }
 
-function parsePriceToBeat(market) {
-  const text = String(market?.question ?? market?.title ?? "");
-  if (!text) return null;
-  const m = text.match(/price\s*to\s*beat[^\d$]*\$?\s*([0-9][0-9,]*(?:\.[0-9]+)?)/i);
-  if (!m) return null;
-  const raw = m[1].replace(/,/g, "");
-  const n = Number(raw);
-  return Number.isFinite(n) ? n : null;
-}
-
 const dumpedMarkets = new Set();
 
 function safeFileSlug(x) {
@@ -217,63 +209,6 @@ function safeFileSlug(x) {
     .replace(/-+/g, "-")
     .replace(/(^-|-$)/g, "")
     .slice(0, 120);
-}
-
-function extractNumericFromMarket(market) {
-  const directKeys = [
-    "priceToBeat",
-    "price_to_beat",
-    "strikePrice",
-    "strike_price",
-    "strike",
-    "threshold",
-    "thresholdPrice",
-    "threshold_price",
-    "targetPrice",
-    "target_price",
-    "referencePrice",
-    "reference_price"
-  ];
-
-  for (const k of directKeys) {
-    const v = market?.[k];
-    const n = typeof v === "string" ? Number(v) : typeof v === "number" ? v : NaN;
-    if (Number.isFinite(n)) return n;
-  }
-
-  const seen = new Set();
-  const stack = [{ obj: market, depth: 0 }];
-
-  while (stack.length) {
-    const { obj, depth } = stack.pop();
-    if (!obj || typeof obj !== "object") continue;
-    if (seen.has(obj) || depth > 6) continue;
-    seen.add(obj);
-
-    const entries = Array.isArray(obj) ? obj.entries() : Object.entries(obj);
-    for (const [key, value] of entries) {
-      const k = String(key).toLowerCase();
-      if (value && typeof value === "object") {
-        stack.push({ obj: value, depth: depth + 1 });
-        continue;
-      }
-
-      if (!/(price|strike|threshold|target|beat)/i.test(k)) continue;
-
-      const n = typeof value === "string" ? Number(value) : typeof value === "number" ? value : NaN;
-      if (!Number.isFinite(n)) continue;
-
-      if (n > 1000 && n < 2_000_000) return n;
-    }
-  }
-
-  return null;
-}
-
-function priceToBeatFromPolymarketMarket(market) {
-  const n = extractNumericFromMarket(market);
-  if (n !== null) return n;
-  return parsePriceToBeat(market);
 }
 
 const marketCache = {
@@ -289,7 +224,7 @@ async function resolveCurrentBtc15mMarket() {
   if (!CONFIG.polymarket.autoSelectLatest) return null;
 
   const now = Date.now();
-  if (marketCache.market && now - marketCache.fetchedAtMs < CONFIG.pollIntervalMs) {
+  if (marketCache.market && now - marketCache.fetchedAtMs < CONFIG.marketCacheMs) {
     return marketCache.market;
   }
 
@@ -438,9 +373,8 @@ async function main() {
           ? Promise.resolve({ price: chainlinkWsPrice, updatedAt: chainlinkWsTick?.updatedAt ?? null, source: "chainlink_ws" })
           : fetchChainlinkBtcUsd();
 
-      const [klines1m, klines5m, lastPrice, chainlink, poly] = await Promise.all([
+      const [klines1m, lastPrice, chainlink, poly] = await Promise.all([
         fetchKlines({ interval: "1m", limit: 240 }),
-        fetchKlines({ interval: "5m", limit: 200 }),
         fetchLastPrice(),
         chainlinkPromise,
         fetchPolymarketSnapshot()
@@ -454,7 +388,6 @@ async function main() {
       const candles = klines1m;
       const closes = candles.map((c) => c.close);
 
-      const vwap = computeSessionVwap(candles);
       const vwapSeries = computeVwapSeries(candles);
       const vwapNow = vwapSeries[vwapSeries.length - 1];
 
@@ -463,12 +396,7 @@ async function main() {
       const vwapDist = vwapNow ? (lastPrice - vwapNow) / vwapNow : null;
 
       const rsiNow = computeRsi(closes, CONFIG.rsiPeriod);
-      const rsiSeries = [];
-      for (let i = 0; i < closes.length; i += 1) {
-        const sub = closes.slice(0, i + 1);
-        const r = computeRsi(sub, CONFIG.rsiPeriod);
-        if (r !== null) rsiSeries.push(r);
-      }
+      const rsiSeries = computeRsiSeries(closes, CONFIG.rsiPeriod, CONFIG.rsiMaPeriod + 5);
       const rsiMa = sma(rsiSeries, CONFIG.rsiMaPeriod);
       const rsiSlope = slopeLast(rsiSeries, 3);
 
@@ -512,7 +440,7 @@ async function main() {
       const marketDown = poly.ok ? poly.prices.down : null;
       const edge = computeEdge({ modelUp: timeAware.adjustedUp, modelDown: timeAware.adjustedDown, marketYes: marketUp, marketNo: marketDown });
 
-      const rec = decide({ remainingMinutes: timeLeftMin, edgeUp: edge.edgeUp, edgeDown: edge.edgeDown, modelUp: timeAware.adjustedUp, modelDown: timeAware.adjustedDown });
+      const rec = decide({ remainingMinutes: timeLeftMin, edgeUp: edge.edgeUp, edgeDown: edge.edgeDown, modelUp: timeAware.adjustedUp, modelDown: timeAware.adjustedDown, regime: regimeInfo.regime });
 
       const vwapSlopeLabel = vwapSlope === null ? "-" : vwapSlope > 0 ? "UP" : vwapSlope < 0 ? "DOWN" : "FLAT";
 
@@ -616,7 +544,7 @@ async function main() {
       const ptbDeltaText = ptbDelta === null
         ? `${ANSI.gray}-${ANSI.reset}`
         : `${ptbDeltaColor}${ptbDelta > 0 ? "+" : ptbDelta < 0 ? "-" : ""}$${Math.abs(ptbDelta).toFixed(2)}${ANSI.reset}`;
-      const currentPriceValue = currentPriceBaseLine.split(": ")[1] ?? currentPriceBaseLine;
+      const currentPriceValue = currentPriceBaseLine.split(": ").slice(1).join(": ") || currentPriceBaseLine;
       const currentPriceLine = kv("CURRENT PRICE:", `${currentPriceValue} (${ptbDeltaText})`);
 
       if (poly.ok && poly.market && priceToBeatState.value === null) {
@@ -642,7 +570,7 @@ async function main() {
         })()
         : "";
       const binanceSpotLine = `${binanceSpotBaseLine}${diffLine}`;
-      const binanceSpotValue = binanceSpotLine.split(": ")[1] ?? binanceSpotLine;
+      const binanceSpotValue = binanceSpotLine.split(": ").slice(1).join(": ") || binanceSpotLine;
       const binanceSpotKvLine = kv("BTC (Binance):", binanceSpotValue);
 
       const titleLine = poly.ok ? `${poly.market?.question ?? "-"}` : "-";
@@ -675,11 +603,11 @@ async function main() {
         sepLine(),
         "",
         kv("TA Predict:", predictValue),
-        kv("Heiken Ashi:", heikenLine.split(": ")[1] ?? heikenLine),
-        kv("RSI:", rsiLine.split(": ")[1] ?? rsiLine),
-        kv("MACD:", macdLine.split(": ")[1] ?? macdLine),
-        kv("Delta 1/3:", deltaLine.split(": ")[1] ?? deltaLine),
-        kv("VWAP:", vwapLine.split(": ")[1] ?? vwapLine),
+        kv("Heiken Ashi:", heikenLine.split(": ").slice(1).join(": ") || heikenLine),
+        kv("RSI:", rsiLine.split(": ").slice(1).join(": ") || rsiLine),
+        kv("MACD:", macdLine.split(": ").slice(1).join(": ") || macdLine),
+        kv("Delta 1/3:", deltaLine.split(": ").slice(1).join(": ") || deltaLine),
+        kv("VWAP:", vwapLine.split(": ").slice(1).join(": ") || vwapLine),
         "",
         sepLine(),
         "",
@@ -700,6 +628,98 @@ async function main() {
         sepLine(),
         centerText(`${ANSI.dim}${ANSI.gray}created by @krajekis${ANSI.reset}`, screenWidth())
       ].filter((x) => x !== null);
+
+      const PAPER_MODE = (process.env.PAPER_TRADING ?? "false").toLowerCase() === "true";
+      const EXECUTE_MODE = (process.env.EXECUTE_ORDERS ?? "false").toLowerCase() === "true";
+
+      // ── Paper Trading ─────────────────────────────────────────────────────
+      const paperResult = PAPER_MODE && !EXECUTE_MODE
+        ? onPaperTick({ rec, poly, spotPrice, timeLeftMin })
+        : null;
+
+      const paperStats = PAPER_MODE ? getPaperStats() : null;
+      const paperPos   = PAPER_MODE ? getPaperPosition() : null;
+
+      // ── Execução de ordens reais ──────────────────────────────────────────
+      const botResult = await onSignal({ rec, poly, priceToBeat, timeLeftMin });
+      const botStatus = getBotStatus();
+
+      // ── Linha de status: bot real ─────────────────────────────────────────
+      const botStatusLine = (() => {
+        if (PAPER_MODE && !EXECUTE_MODE) return null;
+        if (!botStatus.executeOrders) {
+          return kv("Bot:", `${ANSI.gray}MONITOR (EXECUTE_ORDERS=false)${ANSI.reset}`);
+        }
+        if (botStatus.circuitBreaker) {
+          return kv("Bot:", `${ANSI.red}⛔ CIRCUIT BREAKER — perda máxima diária${ANSI.reset}`);
+        }
+        if (botStatus.initError) {
+          return kv("Bot:", `${ANSI.red}⚠ Erro: ${botStatus.initError}${ANSI.reset}`);
+        }
+        if (botResult.mode === "entered") {
+          return kv("Bot:", `${ANSI.green}✅ ENTROU ${botResult.side} $${botResult.usdcAmount} @ ${botResult.entryPrice}${ANSI.reset}`);
+        }
+        if (botResult.mode === "holding" && botStatus.position) {
+          const pos = botStatus.position;
+          const pnlStr = botResult.unrealizedPnl !== null
+            ? ` | P&L: ${botResult.unrealizedPnl >= 0 ? ANSI.green + "+" : ANSI.red}$${(botResult.unrealizedPnl ?? 0).toFixed(2)}${ANSI.reset}`
+            : "";
+          return kv("Bot:", `${ANSI.yellow}⏳ Holding ${pos.side} $${pos.usdcAmount}${pnlStr}${ANSI.reset}`);
+        }
+        if (botResult.mode === "blocked") {
+          return kv("Bot:", `${ANSI.gray}Bloqueado: ${botResult.reason}${ANSI.reset}`);
+        }
+        return kv("Bot:", `${ANSI.gray}Aguardando sinal...${ANSI.reset}`);
+      })();
+
+      const dailyStats = botStatus.daily;
+      const dailyLine = EXECUTE_MODE
+        ? kv("Dia:", `${dailyStats.realizedPnl >= 0 ? ANSI.green : ANSI.red}${dailyStats.realizedPnl >= 0 ? "+" : ""}$${dailyStats.realizedPnl.toFixed(2)}${ANSI.reset} | ${dailyStats.wins}W / ${dailyStats.losses}L`)
+        : null;
+
+      // ── Linhas de paper trading ───────────────────────────────────────────
+      const paperLines = (() => {
+        if (!PAPER_MODE || !paperStats) return [];
+
+        const s = paperStats;
+        const headerColor = ANSI.yellow;
+
+        const posLine = (() => {
+          if (!paperPos?.open) return kv("Posição:", `${ANSI.gray}Sem posição${ANSI.reset}`);
+          const side = paperPos.side === "UP" ? `${ANSI.green}UP${ANSI.reset}` : `${ANSI.red}DOWN${ANSI.reset}`;
+          return kv("Posição:", `${side} $${paperPos.usdcAmount} @ ${paperPos.entryPrice?.toFixed(2)}`);
+        })();
+
+        const winRateColor = s.winRate === null ? ANSI.gray
+          : s.winRate >= 55 ? ANSI.green
+          : s.winRate >= 45 ? ANSI.yellow
+          : ANSI.red;
+
+        const pnlColor = s.totalPnl >= 0 ? ANSI.green : ANSI.red;
+
+        return [
+          "",
+          sepLine("─"),
+          "",
+          `${headerColor}PAPER TRADING${ANSI.reset}`,
+          posLine,
+          kv("Trades:", s.totalTrades === 0
+            ? `${ANSI.gray}Nenhum ainda${ANSI.reset}`
+            : `${s.totalTrades} | ${ANSI.green}${s.wins}W${ANSI.reset} / ${ANSI.red}${s.losses}L${ANSI.reset}`),
+          s.totalTrades > 0 ? kv("Win rate:", `${winRateColor}${s.winRate}%${ANSI.reset}`) : null,
+          s.totalTrades > 0 ? kv("P&L total:", `${pnlColor}${s.totalPnl >= 0 ? "+" : ""}$${s.totalPnl.toFixed(2)}${ANSI.reset} (ROI ${s.roi >= 0 ? "+" : ""}${s.roi}%)`) : null,
+          s.totalTrades > 0 ? kv("Média/trade:", `${s.avgPnl >= 0 ? ANSI.green : ANSI.red}${s.avgPnl >= 0 ? "+" : ""}$${s.avgPnl.toFixed(2)}${ANSI.reset}`) : null,
+        ].filter(Boolean);
+      })();
+
+      lines.push(...[
+        "",
+        sepLine(),
+        "",
+        botStatusLine,
+        dailyLine,
+        ...paperLines
+      ].filter(Boolean));
 
       renderScreen(lines.join("\n") + "\n");
 
@@ -729,5 +749,16 @@ async function main() {
     await sleep(CONFIG.pollIntervalMs);
   }
 }
+
+process.on("SIGINT", async () => {
+  console.log("\n[bot] Encerrando — cancelando ordens abertas...");
+  await emergencyShutdown();
+  process.exit(0);
+});
+
+process.on("SIGTERM", async () => {
+  await emergencyShutdown();
+  process.exit(0);
+});
 
 main();
