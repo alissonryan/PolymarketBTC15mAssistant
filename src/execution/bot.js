@@ -63,15 +63,15 @@ export async function onSignal({ rec, poly, priceToBeat, timeLeftMin }) {
     return { mode: "waiting", reason: "polymarket_unavailable" };
   }
 
-  const edgeBest = rec.side === "UP" ? (rec.edge ?? 0) : (rec.edge ?? 0);
-  const risk = canTrade({ openPositions: 0, edgeBest });
+  const edgeBest = rec.edge ?? 0;
+  const currentPrice = rec.side === "UP" ? poly.prices?.up : poly.prices?.down;
+  const risk = canTrade({ openPositions: 0, edgeBest, tokenPrice: currentPrice });
 
   if (!risk.allowed) {
     return { mode: "blocked", reason: risk.reason };
   }
 
   const tokenId = rec.side === "UP" ? poly.tokens.upTokenId : poly.tokens.downTokenId;
-  const currentPrice = rec.side === "UP" ? poly.prices?.up : poly.prices?.down;
 
   if (!tokenId) {
     return { mode: "blocked", reason: "token_id_nao_encontrado" };

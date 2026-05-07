@@ -112,7 +112,7 @@ export function onPaperTick({ rec, poly, spotPrice, timeLeftMin }) {
     }
 
     const edgeBest = rec.edge ?? 0;
-    const risk = canTrade({ openPositions: 0, edgeBest });
+    const risk = canTrade({ openPositions: 0, edgeBest, tokenPrice: entryPrice });
     if (!risk.allowed) {
       return { mode: "blocked", reason: risk.reason };
     }

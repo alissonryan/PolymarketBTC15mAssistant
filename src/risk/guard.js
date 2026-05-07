@@ -44,10 +44,11 @@ export function isCircuitBreakerTripped() {
   return daily.realizedPnl <= -maxLoss;
 }
 
-export function canTrade({ openPositions = 0, edgeBest = 0 }) {
+export function canTrade({ openPositions = 0, edgeBest = 0, tokenPrice = null }) {
   const minEdge = Number(process.env.RISK_MIN_EDGE ?? 0.08);
   const maxOpen = Number(process.env.RISK_MAX_OPEN_POSITIONS ?? 1);
   const orderSize = Number(process.env.RISK_ORDER_SIZE_USDC ?? 5);
+  const minTokenPrice = Number(process.env.RISK_MIN_TOKEN_PRICE ?? 0.30);
 
   if (isCircuitBreakerTripped()) {
     return { allowed: false, reason: "circuit_breaker_perda_diaria_maxima" };
@@ -59,6 +60,10 @@ export function canTrade({ openPositions = 0, edgeBest = 0 }) {
 
   if (edgeBest < minEdge) {
     return { allowed: false, reason: `edge_abaixo_do_minimo_${minEdge}` };
+  }
+
+  if (tokenPrice !== null && tokenPrice < minTokenPrice) {
+    return { allowed: false, reason: `token_price_abaixo_do_minimo_${minTokenPrice}` };
   }
 
   return { allowed: true, orderSize };
