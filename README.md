@@ -124,6 +124,12 @@ BTC:
 EXECUTE_ORDERS=false PAPER_TRADING=true npm run kalshi:btc
 ```
 
+Use a custom paper log prefix when you want a clean run:
+
+```bash
+PAPER_LOG_PREFIX=clean_kalshi_btc_ npm run kalshi:btc
+```
+
 ETH:
 
 ```bash

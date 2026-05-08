@@ -9,9 +9,9 @@
     "analyze:paper": "node scripts/analyze-paper.js",
     "polymarket:btc:5m": "CANDLE_WINDOW_MINUTES=5 EXECUTE_ORDERS=false PAPER_TRADING=true node --env-file=.env src/index.js",
     "polymarket:btc:15m": "CANDLE_WINDOW_MINUTES=15 EXECUTE_ORDERS=false PAPER_TRADING=true node --env-file=.env src/index.js",
-    "kalshi:btc": "KALSHI_SERIES=KXBTC15M PAPER_LOG_PREFIX=kalshi_btc_ node --env-file=.env src/index-kalshi.js",
-    "kalshi:eth": "KALSHI_SERIES=KXETH15M PAPER_LOG_PREFIX=kalshi_eth_ node --env-file=.env src/index-kalshi.js",
-    "kalshi:sol": "KALSHI_SERIES=KXSOL15M PAPER_LOG_PREFIX=kalshi_sol_ node --env-file=.env src/index-kalshi.js"
+    "kalshi:btc": "KALSHI_SERIES=${KALSHI_SERIES:-KXBTC15M} PAPER_LOG_PREFIX=${PAPER_LOG_PREFIX:-kalshi_btc_} node --env-file=.env src/index-kalshi.js",
+    "kalshi:eth": "KALSHI_SERIES=${KALSHI_SERIES:-KXETH15M} PAPER_LOG_PREFIX=${PAPER_LOG_PREFIX:-kalshi_eth_} node --env-file=.env src/index-kalshi.js",
+    "kalshi:sol": "KALSHI_SERIES=${KALSHI_SERIES:-KXSOL15M} PAPER_LOG_PREFIX=${PAPER_LOG_PREFIX:-kalshi_sol_} node --env-file=.env src/index-kalshi.js"
   },
   "dependencies": {
     "@polymarket/clob-client": "^5.8.1",
