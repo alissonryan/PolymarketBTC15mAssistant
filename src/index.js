@@ -13,6 +13,7 @@ import {
   fetchOrderBook,
   summarizeOrderBook
 } from "./data/polymarket.js";
+import { computeMacroTrend } from "./engines/macroTrend.js";
 import { computeVwapSeries } from "./indicators/vwap.js";
 import { computeRsi, computeRsiSeries, sma, slopeLast } from "./indicators/rsi.js";
 import { computeMacd } from "./indicators/macd.js";
@@ -357,6 +358,24 @@ async function main() {
   let prevCurrentPrice = null;
   let priceToBeatState = { slug: null, value: null, setAtMs: null };
 
+  // 1H kline cache — refresh every 5 minutes to avoid API spam
+  let klines1hCache = { data: null, fetchedAtMs: 0 };
+  const KLINES1H_TTL_MS = 5 * 60 * 1000;
+
+  async function getKlines1h() {
+    const now = Date.now();
+    if (klines1hCache.data && now - klines1hCache.fetchedAtMs < KLINES1H_TTL_MS) {
+      return klines1hCache.data;
+    }
+    try {
+      const data = await fetchKlines({ interval: "1h", limit: 60 });
+      klines1hCache = { data, fetchedAtMs: now };
+      return data;
+    } catch {
+      return klines1hCache.data ?? [];
+    }
+  }
+
   const header = [
     "timestamp",
     "entry_minute",
@@ -416,12 +435,15 @@ async function main() {
           ? Promise.resolve({ price: chainlinkWsPrice, updatedAt: chainlinkWsTick?.updatedAt ?? null, source: "chainlink_ws" })
           : fetchChainlinkBtcUsd();
 
-      const [klines1m, lastPrice, chainlink, poly] = await Promise.all([
+      const [klines1m, lastPrice, chainlink, poly, klines1h] = await Promise.all([
         fetchKlines({ interval: "1m", limit: 240 }),
         fetchLastPrice(),
         chainlinkPromise,
-        fetchPolymarketSnapshot()
+        fetchPolymarketSnapshot(),
+        getKlines1h()
       ]);
+
+      const macroInfo = computeMacroTrend(klines1h);
 
       const settlementMs = poly.ok && poly.market?.endDate ? new Date(poly.market.endDate).getTime() : null;
       const settlementLeftMin = settlementMs ? (settlementMs - Date.now()) / 60_000 : null;
@@ -522,6 +544,7 @@ async function main() {
         modelUp: timeAware.adjustedUp,
         modelDown: timeAware.adjustedDown,
         regime: regimeInfo.regime,
+        macroTrend: macroInfo.trend,
         spreadUp,
         spreadDown
       });
@@ -667,6 +690,11 @@ async function main() {
         : "";
       const cvdDisplayLine = kv("CVD:", `${cvdTrendColor}${cvdState.trend}${ANSI.reset}${cvdDivLine}${cvdAbsLine}`);
 
+      // Macro trend (1H EMA50)
+      const macroColor = macroInfo.trend === "UP" ? ANSI.green : macroInfo.trend === "DOWN" ? ANSI.red : ANSI.gray;
+      const macroEmaStr = macroInfo.ema50 !== null ? ` | EMA50=$${macroInfo.ema50.toFixed(0)}` : "";
+      const macroDisplayLine = kv("Macro 1H:", `${macroColor}${macroInfo.trend}${ANSI.reset}${macroEmaStr}`);
+
       // TPC display
       const tpLine = tpField.inField
         ? kv("TPC:", `${tpField.direction === "UP" ? ANSI.green : ANSI.red}${tpField.direction} ${(tpField.probability * 100).toFixed(0)}% [${tpField.urgency}]${ANSI.reset}`)
@@ -691,6 +719,7 @@ async function main() {
         kv("Delta 1/3:", deltaLine.split(": ").slice(1).join(": ") || deltaLine),
         kv("VWAP:", vwapLine.split(": ").slice(1).join(": ") || vwapLine),
         cvdDisplayLine,
+        macroDisplayLine,
         tpLine,
         lockLine,
         "",

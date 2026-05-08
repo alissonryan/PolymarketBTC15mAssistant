@@ -36,6 +36,16 @@ export function slopeLast(values, points) {
   return (last - first) / (points - 1);
 }
 
+export function ema(closes, period) {
+  if (!Array.isArray(closes) || closes.length < period) return null;
+  const k = 2 / (period + 1);
+  let val = closes.slice(0, period).reduce((a, b) => a + b, 0) / period;
+  for (let i = period; i < closes.length; i += 1) {
+    val = closes[i] * k + val * (1 - k);
+  }
+  return val;
+}
+
 export function computeRsiSeries(closes, period, count) {
   const results = [];
   for (let i = Math.max(period, closes.length - count); i < closes.length; i += 1) {

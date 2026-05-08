@@ -1,4 +1,5 @@
 import { fetchKlines, fetchLastPrice } from "./data/binance.js";
+import { computeMacroTrend } from "./engines/macroTrend.js";
 import { startBinanceTradeStream } from "./data/binanceWs.js";
 import { fetchKalshiSnapshot, kalshiToBinanceSymbol } from "./data/kalshi.js";
 import { computeVwapSeries } from "./indicators/vwap.js";
@@ -104,16 +105,37 @@ async function main() {
 
   console.log(`\n[kalshi] Iniciando paper trading — série: ${SERIES} (${SYMBOL})\n`);
 
+  // 1H kline cache — refresh every 5 minutes
+  let klines1hCache = { data: null, fetchedAtMs: 0 };
+  const KLINES1H_TTL_MS = 5 * 60 * 1000;
+
+  async function getKlines1h() {
+    const now = Date.now();
+    if (klines1hCache.data && now - klines1hCache.fetchedAtMs < KLINES1H_TTL_MS) {
+      return klines1hCache.data;
+    }
+    try {
+      const data = await fetchKlines({ symbol: SYMBOL, interval: "1h", limit: 60 });
+      klines1hCache = { data, fetchedAtMs: now };
+      return data;
+    } catch {
+      return klines1hCache.data ?? [];
+    }
+  }
+
   while (true) {
     try {
       const wsTick   = binanceStream.getLast();
       const spotPrice = wsTick?.price ?? null;
 
-      const [klines1m, lastPrice, snap] = await Promise.all([
+      const [klines1m, lastPrice, snap, klines1h] = await Promise.all([
         fetchKlines({ symbol: SYMBOL, interval: "1m", limit: 240 }),
         fetchLastPrice(SYMBOL),
-        fetchKalshiSnapshot(SERIES)
+        fetchKalshiSnapshot(SERIES),
+        getKlines1h()
       ]);
+
+      const macroInfo = computeMacroTrend(klines1h);
 
       if (!snap.ok) {
         renderScreen(`[kalshi] Aguardando mercado ativo... (${snap.reason})\n`);
@@ -200,6 +222,7 @@ async function main() {
         edgeUp: edge.edgeUp, edgeDown: edge.edgeDown,
         modelUp: timeAware.adjustedUp, modelDown: timeAware.adjustedDown,
         regime: regimeInfo.regime,
+        macroTrend: macroInfo.trend,
         spreadUp: spreadYes,
         spreadDown: spreadNo
       });
@@ -241,8 +264,10 @@ async function main() {
       const paperPos   = PAPER_MODE ? getPaperPosition() : null;
 
       // ── display ──────────────────────────────────────────────────────────────
-      const timeColor = timeLeftMin0 > 10 ? ANSI.green : timeLeftMin0 > 5 ? ANSI.yellow : ANSI.red;
-      const cvdColor  = cvdState.trend === "BUYING" ? ANSI.green : cvdState.trend === "SELLING" ? ANSI.red : ANSI.gray;
+      const timeColor  = timeLeftMin0 > 10 ? ANSI.green : timeLeftMin0 > 5 ? ANSI.yellow : ANSI.red;
+      const cvdColor   = cvdState.trend === "BUYING" ? ANSI.green : cvdState.trend === "SELLING" ? ANSI.red : ANSI.gray;
+      const macroColor = macroInfo.trend === "UP" ? ANSI.green : macroInfo.trend === "DOWN" ? ANSI.red : ANSI.gray;
+      const macroEmaStr = macroInfo.ema50 !== null ? ` | EMA50=$${macroInfo.ema50.toFixed(0)}` : "";
       const recColor  = rec.action === "ENTER" ? (rec.side === "UP" ? ANSI.green : ANSI.red) : ANSI.gray;
       const pnlColor  = (paperStats?.totalPnl ?? 0) >= 0 ? ANSI.green : ANSI.red;
 
@@ -263,6 +288,7 @@ async function main() {
         kv("Mkt YES:", `${ANSI.green}${marketYes?.toFixed(3) ?? "-"}${ANSI.reset}`),
         kv("Mkt NO:", `${ANSI.red}${marketNo?.toFixed(3) ?? "-"}${ANSI.reset}`),
         kv("Regime:", regimeInfo.regime),
+        kv("Macro 1H:", `${macroColor}${macroInfo.trend}${ANSI.reset}${macroEmaStr}`),
         kv("CVD:", `${cvdColor}${cvdState.trend}${ANSI.reset}${cvdDivergence ? ` | ${cvdDivergence.type === "BULLISH" ? ANSI.green + "div↑" : ANSI.red + "div↓"}${ANSI.reset}` : ""}`),
         tpField.inField ? kv("TPC:", `${tpField.direction === "UP" ? ANSI.green : ANSI.red}${tpField.direction} ${(tpField.probability * 100).toFixed(0)}% [${tpField.urgency}]${ANSI.reset}`) : null,
         lockOp.actionable ? kv("LOCK:", `${ANSI.yellow}BOTH | +${(lockOp.profit * 100).toFixed(1)}% garantido${ANSI.reset}`) : null,

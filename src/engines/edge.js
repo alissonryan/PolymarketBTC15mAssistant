@@ -27,6 +27,7 @@ export function decide({
   modelUp = null,
   modelDown = null,
   regime = null,
+  macroTrend = null,
   spreadUp = null,
   spreadDown = null,
   maxSpread = Number(process.env.RISK_MAX_SPREAD ?? 0.03)
@@ -53,6 +54,14 @@ export function decide({
   const bestEdge = bestSide === "UP" ? edgeUp : edgeDown;
   const bestModel = bestSide === "UP" ? modelUp : modelDown;
   const bestSpread = bestSide === "UP" ? spreadUp : spreadDown;
+
+  // Macro trend gate: block DOWN bets when 1H trend is UP, and block UP bets when 1H trend is DOWN
+  if (macroTrend === "UP" && bestSide === "DOWN") {
+    return { action: "NO_TRADE", side: null, phase, reason: "macro_trend_up_blocks_down" };
+  }
+  if (macroTrend === "DOWN" && bestSide === "UP") {
+    return { action: "NO_TRADE", side: null, phase, reason: "macro_trend_down_blocks_up" };
+  }
 
   if (bestSpread !== null && Number.isFinite(Number(bestSpread)) && Number(bestSpread) > maxSpread) {
     return { action: "NO_TRADE", side: null, phase, reason: `spread_acima_do_maximo_${maxSpread}` };
