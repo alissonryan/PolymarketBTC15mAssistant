@@ -12,10 +12,10 @@ Important: the on-screen LONG/SHORT value is a heuristic score, not a calibrated
 
 ## Current Safety Mode
 
-The recommended mode is still paper trading:
+The recommended mode is still paper trading. Running `npm start` opens an interactive paper-trading menu:
 
 ```bash
-EXECUTE_ORDERS=false PAPER_TRADING=true npm start
+npm start
 ```
 
 Do not enable real execution until paper results are positive and auditable.
@@ -80,16 +80,31 @@ npm install
 
 ## Run Polymarket Paper Trading
 
-Default 15m:
+Interactive menu:
 
 ```bash
-EXECUTE_ORDERS=false PAPER_TRADING=true npm start
+npm start
 ```
 
-5m:
+Direct commands are kept for automation and remote runners.
+
+BTC 5m:
 
 ```bash
-EXECUTE_ORDERS=false PAPER_TRADING=true CANDLE_WINDOW_MINUTES=5 npm start
+npm run polymarket:btc:5m
+```
+
+BTC 15m:
+
+```bash
+npm run polymarket:btc:15m
+```
+
+Equivalent manual commands:
+
+```bash
+EXECUTE_ORDERS=false PAPER_TRADING=true CANDLE_WINDOW_MINUTES=5 node --env-file=.env src/index.js
+EXECUTE_ORDERS=false PAPER_TRADING=true CANDLE_WINDOW_MINUTES=15 node --env-file=.env src/index.js
 ```
 
 Pin a specific Polymarket market:
@@ -99,6 +114,8 @@ POLYMARKET_SLUG=btc-updown-15m-... EXECUTE_ORDERS=false PAPER_TRADING=true npm s
 ```
 
 ## Run Kalshi Paper Trading
+
+Kalshi choices are available in the `npm start` menu. Direct commands:
 
 BTC:
 
@@ -129,6 +146,8 @@ KALSHI_DEMO=false
 Private keys and `.env` files are ignored by git.
 
 ## Validation Commands
+
+The `npm start` menu also includes shortcuts for paper analysis and tests.
 
 Run tests:
 
