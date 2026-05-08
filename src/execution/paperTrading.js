@@ -6,6 +6,8 @@ import { estimateTakerFee } from "./paperMath.js";
 const _prefix = process.env.PAPER_LOG_PREFIX || "";
 const POSITION_FILE = path.join(process.cwd(), "logs", `${_prefix}paper_position.json`);
 const HISTORY_FILE  = path.join(process.cwd(), "logs", `${_prefix}paper_trades.json`);
+const LOCK_FILE = path.join(process.cwd(), "logs", `${_prefix}paper.lock`);
+let _lockFd = null;
 
 // Preço da Binance latched no início de cada janela de mercado
 // Usado em vez do Chainlink (que pode ficar congelado por horas em baixa volatilidade)
@@ -45,6 +47,44 @@ function loadJson(file, fallback) {
 function saveJson(file, data) {
   ensureDir(file);
   fs.writeFileSync(file, JSON.stringify(data, null, 2), "utf8");
+}
+
+export function acquirePaperLock() {
+  if (_lockFd !== null) return { acquired: true, file: LOCK_FILE };
+  try {
+    ensureDir(LOCK_FILE);
+    _lockFd = fs.openSync(LOCK_FILE, "wx");
+    fs.writeFileSync(_lockFd, JSON.stringify({ pid: process.pid, startedAt: new Date().toISOString() }), "utf8");
+    return { acquired: true, file: LOCK_FILE };
+  } catch (err) {
+    if (err?.code === "EEXIST") {
+      try {
+        const lock = JSON.parse(fs.readFileSync(LOCK_FILE, "utf8"));
+        if (lock?.pid && Number(lock.pid) !== process.pid) {
+          try {
+            process.kill(Number(lock.pid), 0);
+          } catch (pidErr) {
+            if (pidErr?.code === "ESRCH") {
+              fs.unlinkSync(LOCK_FILE);
+              return acquirePaperLock();
+            }
+          }
+        }
+      } catch {
+        // If the lock file is unreadable, keep the conservative block.
+      }
+      return { acquired: false, file: LOCK_FILE, reason: `paper_lock_exists_${LOCK_FILE}` };
+    }
+    return { acquired: false, file: LOCK_FILE, reason: err?.message ?? String(err) };
+  }
+}
+
+export function releasePaperLock() {
+  if (_lockFd !== null) {
+    try { fs.closeSync(_lockFd); } catch { /* ignore */ }
+    _lockFd = null;
+  }
+  try { fs.unlinkSync(LOCK_FILE); } catch { /* ignore */ }
 }
 
 // ─── estado em memória ───────────────────────────────────────────────────────
@@ -107,6 +147,10 @@ export function onPaperTick({ rec, poly, spotPrice, referencePrice = null, settl
   if (!_pos.open) {
     if (rec.action !== "ENTER" || !poly.ok || !poly.tokens) {
       return { mode: "waiting", reason: rec.reason ?? rec.phase };
+    }
+
+    if (!Number.isFinite(Number(timeLeftMin)) || Number(timeLeftMin) <= 0) {
+      return { mode: "blocked", reason: "market_expired" };
     }
 
     if (!spotPrice) {

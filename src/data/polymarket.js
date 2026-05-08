@@ -87,6 +87,13 @@ function safeTimeMs(x) {
   return Number.isFinite(t) ? t : null;
 }
 
+export function isMarketLive(market, nowMs = Date.now()) {
+  const endMs = safeTimeMs(market?.endDate);
+  if (endMs === null || nowMs >= endMs) return false;
+  const startMs = safeTimeMs(market?.eventStartTime ?? market?.startTime ?? market?.startDate);
+  return startMs === null || startMs <= nowMs;
+}
+
 export function pickLatestLiveMarket(markets, nowMs = Date.now()) {
   if (!Array.isArray(markets) || markets.length === 0) return null;
 
@@ -100,8 +107,7 @@ export function pickLatestLiveMarket(markets, nowMs = Date.now()) {
 
   const live = enriched
     .filter((x) => {
-      const started = x.startMs === null ? true : x.startMs <= nowMs;
-      return started && nowMs < x.endMs;
+      return isMarketLive(x.m, nowMs);
     })
     .sort((a, b) => a.endMs - b.endMs);
 

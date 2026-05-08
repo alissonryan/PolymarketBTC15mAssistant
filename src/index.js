@@ -8,6 +8,7 @@ import {
   fetchLiveEventsBySeriesId,
   flattenEventMarkets,
   pickLatestLiveMarket,
+  isMarketLive,
   fetchClobPrice,
   fetchOrderBook,
   summarizeOrderBook
@@ -22,7 +23,7 @@ import { computeEdge, decide } from "./engines/edge.js";
 import { appendCsvRow, formatNumber, formatPct, getCandleWindowTiming, sleep } from "./utils.js";
 import { startBinanceTradeStream } from "./data/binanceWs.js";
 import { onSignal, emergencyShutdown, getBotStatus } from "./execution/bot.js";
-import { onPaperTick, getPaperStats, getPaperPosition, hasPaperPosition } from "./execution/paperTrading.js";
+import { acquirePaperLock, releasePaperLock, onPaperTick, getPaperStats, getPaperPosition, hasPaperPosition } from "./execution/paperTrading.js";
 import { CVDAnalyzer } from "./indicators/cvd.js";
 import { TimePriceConvergence } from "./engines/timePriceField.js";
 import { LockStrategy } from "./engines/lockStrategy.js";
@@ -227,7 +228,7 @@ async function resolveCurrentBtc15mMarket() {
   if (!CONFIG.polymarket.autoSelectLatest) return null;
 
   const now = Date.now();
-  if (marketCache.market && now - marketCache.fetchedAtMs < CONFIG.marketCacheMs) {
+  if (marketCache.market && isMarketLive(marketCache.market, now) && now - marketCache.fetchedAtMs < CONFIG.marketCacheMs) {
     return marketCache.market;
   }
 
@@ -344,6 +345,13 @@ async function main() {
   });
   const polymarketLiveStream = startPolymarketChainlinkPriceStream({});
   const chainlinkStream = startChainlinkPriceStream({});
+  const PAPER_MODE_BOOT = (process.env.PAPER_TRADING ?? "false").toLowerCase() === "true";
+  const EXECUTE_MODE_BOOT = (process.env.EXECUTE_ORDERS ?? "false").toLowerCase() === "true";
+  if (PAPER_MODE_BOOT && !EXECUTE_MODE_BOOT) {
+    const lock = acquirePaperLock();
+    if (!lock.acquired) throw new Error(lock.reason);
+    process.once("exit", releasePaperLock);
+  }
 
   let prevSpotPrice = null;
   let prevCurrentPrice = null;
@@ -459,6 +467,9 @@ async function main() {
 
       const marketUp = poly.ok ? poly.prices.up : null;
       const marketDown = poly.ok ? poly.prices.down : null;
+      const spreadUp = poly.ok ? poly.orderbook.up.spread : null;
+      const spreadDown = poly.ok ? poly.orderbook.down.spread : null;
+      const spread = spreadUp !== null && spreadDown !== null ? Math.max(spreadUp, spreadDown) : (spreadUp ?? spreadDown);
 
       // Spot price and priceToBeat — needed by TPC and Lock before scoring
       const spotPrice = wsPrice ?? lastPrice;
@@ -504,7 +515,16 @@ async function main() {
 
       const edge = computeEdge({ modelUp: timeAware.adjustedUp, modelDown: timeAware.adjustedDown, marketYes: marketUp, marketNo: marketDown });
 
-      const rec = decide({ remainingMinutes: timeLeftMin, edgeUp: edge.edgeUp, edgeDown: edge.edgeDown, modelUp: timeAware.adjustedUp, modelDown: timeAware.adjustedDown, regime: regimeInfo.regime });
+      const rec = decide({
+        remainingMinutes: timeLeftMin,
+        edgeUp: edge.edgeUp,
+        edgeDown: edge.edgeDown,
+        modelUp: timeAware.adjustedUp,
+        modelDown: timeAware.adjustedDown,
+        regime: regimeInfo.regime,
+        spreadUp,
+        spreadDown
+      });
 
       const vwapSlopeLabel = vwapSlope === null ? "-" : vwapSlope > 0 ? "UP" : vwapSlope < 0 ? "DOWN" : "FLAT";
 
@@ -561,10 +581,6 @@ async function main() {
         ? `${rec.action} NOW (${rec.phase} ENTRY)`
         : `NO TRADE (${rec.phase})`;
 
-      const spreadUp = poly.ok ? poly.orderbook.up.spread : null;
-      const spreadDown = poly.ok ? poly.orderbook.down.spread : null;
-
-      const spread = spreadUp !== null && spreadDown !== null ? Math.max(spreadUp, spreadDown) : (spreadUp ?? spreadDown);
       const liquidity = poly.ok
         ? (Number(poly.market?.liquidityNum) || Number(poly.market?.liquidity) || null)
         : null;

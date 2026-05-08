@@ -33,6 +33,7 @@ RISK_MIN_TOKEN_PRICE=0.30
 RISK_SESSION_START_UTC=8
 RISK_SESSION_END_UTC=23
 RISK_TAKER_FEE_RATE=0.07
+RISK_MAX_SPREAD=0.03
 ```
 
 ## What The Bot Does
@@ -194,8 +195,10 @@ Important files:
 
 - `logs/signals.csv`: legacy signal stream, kept stable for compatibility.
 - `logs/paper_validation_signals.csv`: richer validation stream with bid/ask/spread, score, edge, reference price, current price, and oracle source.
+- `logs/<prefix>validation_signals.csv`: per-prefix validation stream for Kalshi and other prefixed runners.
 - `logs/paper_position.json`: current paper position.
 - `logs/paper_trades.json`: settled paper trades.
+- `logs/<prefix>paper.lock`: runtime lock that prevents two paper bots from writing to the same prefix at once.
 - `logs/daily_pnl.json`: real-execution daily P&L guard state.
 
 Existing old paper logs may not contain all new fields. New trades will include the richer validation fields.
@@ -233,6 +236,9 @@ Existing old paper logs may not contain all new fields. New trades will include 
 - `RISK_SESSION_START_UTC`: default `8`.
 - `RISK_SESSION_END_UTC`: default `23`.
 - `RISK_TAKER_FEE_RATE`: default `0.07`, used for paper fee estimation.
+- `RISK_MAX_SPREAD`: default `0.03`; blocks entries when the selected side's bid/ask spread is wider than this.
+
+The bot also blocks entries after market expiry and prevents duplicate paper processes from using the same `PAPER_LOG_PREFIX`.
 
 ### Proxy
 

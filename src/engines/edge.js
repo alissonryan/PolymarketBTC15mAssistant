@@ -20,7 +20,21 @@ export function computeEdge({ modelUp, modelDown, marketYes, marketNo }) {
   };
 }
 
-export function decide({ remainingMinutes, edgeUp, edgeDown, modelUp = null, modelDown = null, regime = null }) {
+export function decide({
+  remainingMinutes,
+  edgeUp,
+  edgeDown,
+  modelUp = null,
+  modelDown = null,
+  regime = null,
+  spreadUp = null,
+  spreadDown = null,
+  maxSpread = Number(process.env.RISK_MAX_SPREAD ?? 0.03)
+}) {
+  if (!Number.isFinite(Number(remainingMinutes)) || Number(remainingMinutes) <= 0) {
+    return { action: "NO_TRADE", side: null, phase: "EXPIRED", reason: "market_expired" };
+  }
+
   const phase = remainingMinutes > 10 ? "EARLY" : remainingMinutes > 5 ? "MID" : "LATE";
 
   if (regime === "CHOP" || regime === "RANGE") {
@@ -38,6 +52,11 @@ export function decide({ remainingMinutes, edgeUp, edgeDown, modelUp = null, mod
   const bestSide = edgeUp > edgeDown ? "UP" : "DOWN";
   const bestEdge = bestSide === "UP" ? edgeUp : edgeDown;
   const bestModel = bestSide === "UP" ? modelUp : modelDown;
+  const bestSpread = bestSide === "UP" ? spreadUp : spreadDown;
+
+  if (bestSpread !== null && Number.isFinite(Number(bestSpread)) && Number(bestSpread) > maxSpread) {
+    return { action: "NO_TRADE", side: null, phase, reason: `spread_acima_do_maximo_${maxSpread}` };
+  }
 
   if (bestEdge < threshold) {
     return { action: "NO_TRADE", side: null, phase, reason: `edge_below_${threshold}` };

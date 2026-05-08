@@ -11,8 +11,8 @@ import { scoreDirection, applyTimeAwareness } from "./engines/probability.js";
 import { computeEdge, decide } from "./engines/edge.js";
 import { TimePriceConvergence } from "./engines/timePriceField.js";
 import { LockStrategy } from "./engines/lockStrategy.js";
-import { onPaperTick, getPaperStats, getPaperPosition } from "./execution/paperTrading.js";
-import { sleep, formatNumber, formatPct } from "./utils.js";
+import { acquirePaperLock, releasePaperLock, onPaperTick, getPaperStats, getPaperPosition } from "./execution/paperTrading.js";
+import { appendCsvRow, sleep, formatNumber, formatPct } from "./utils.js";
 import { applyGlobalProxyFromEnv } from "./net/proxy.js";
 import readline from "node:readline";
 
@@ -24,6 +24,7 @@ const SERIES     = process.env.KALSHI_SERIES || "KXBTC15M";
 const SYMBOL     = kalshiToBinanceSymbol(SERIES);
 const WINDOW_MIN = 15;
 const POLL_MS    = 2_000;
+const LOG_PREFIX = process.env.PAPER_LOG_PREFIX || "";
 
 const ANSI = {
   reset: "\x1b[0m", red: "\x1b[31m", green: "\x1b[32m",
@@ -68,8 +69,38 @@ async function main() {
     symbol: SYMBOL,
     onUpdate: (trade) => cvdAnalyzer.processTrade(trade)
   });
+  const PAPER_MODE_BOOT = (process.env.PAPER_TRADING ?? "true").toLowerCase() === "true";
+  if (PAPER_MODE_BOOT) {
+    const lock = acquirePaperLock();
+    if (!lock.acquired) throw new Error(lock.reason);
+    process.once("exit", releasePaperLock);
+  }
 
   let priceToBeatState = { ticker: null, value: null };
+  const validationHeader = [
+    "timestamp",
+    "market_slug",
+    "window_minutes",
+    "time_left_min",
+    "regime",
+    "action",
+    "side",
+    "reason",
+    "score_up",
+    "score_down",
+    "entry_price_up",
+    "entry_price_down",
+    "up_best_bid",
+    "up_best_ask",
+    "down_best_bid",
+    "down_best_ask",
+    "spread",
+    "edge_up",
+    "edge_down",
+    "price_to_beat",
+    "current_price",
+    "oracle_source"
+  ];
 
   console.log(`\n[kalshi] Iniciando paper trading — série: ${SERIES} (${SYMBOL})\n`);
 
@@ -137,6 +168,9 @@ async function main() {
       // ── mercado Kalshi ───────────────────────────────────────────────────────
       const marketYes = snap.prices.yes;
       const marketNo  = snap.prices.no;
+      const spreadYes = snap.prices.yes !== null && snap.prices.yesBid !== null ? snap.prices.yes - snap.prices.yesBid : null;
+      const spreadNo = snap.prices.no !== null && snap.prices.noBid !== null ? snap.prices.no - snap.prices.noBid : null;
+      const spread = spreadYes !== null && spreadNo !== null ? Math.max(spreadYes, spreadNo) : (spreadYes ?? spreadNo);
 
       // ── sinais avançados ─────────────────────────────────────────────────────
       const cvdState      = cvdAnalyzer.getCurrentState();
@@ -165,7 +199,9 @@ async function main() {
         remainingMinutes: timeLeftMin0,
         edgeUp: edge.edgeUp, edgeDown: edge.edgeDown,
         modelUp: timeAware.adjustedUp, modelDown: timeAware.adjustedDown,
-        regime: regimeInfo.regime
+        regime: regimeInfo.regime,
+        spreadUp: spreadYes,
+        spreadDown: spreadNo
       });
 
       // Adaptar rec para paper trading (UP/DOWN → YES/NO)
@@ -180,13 +216,25 @@ async function main() {
         ok: snap.ok,
         market: { slug: snap.ticker, endDate: snap.endTime ? new Date(snap.endTime).toISOString() : null },
         tokens: { upTokenId: "yes", downTokenId: "no" },
-        prices: { up: marketYes, down: marketNo }
+        prices: { up: marketYes, down: marketNo },
+        orderbook: {
+          up: { bestBid: snap.prices.yesBid, bestAsk: marketYes, spread: spreadYes },
+          down: { bestBid: snap.prices.noBid, bestAsk: marketNo, spread: spreadNo }
+        }
       };
 
       // ── paper trading ────────────────────────────────────────────────────────
       const PAPER_MODE = (process.env.PAPER_TRADING ?? "true").toLowerCase() === "true";
       const paperResult = PAPER_MODE
-        ? onPaperTick({ rec: recAdapted, poly: polyCompat, spotPrice: spotPrice ?? lastPrice, timeLeftMin: timeLeftMin0 })
+        ? onPaperTick({
+          rec: recAdapted,
+          poly: polyCompat,
+          spotPrice: spotPrice ?? lastPrice,
+          referencePrice: priceToBeat,
+          settlementPrice: spotPrice ?? lastPrice,
+          oracleSource: "kalshi_cf_benchmarks",
+          timeLeftMin: timeLeftMin0
+        })
         : null;
 
       const paperStats = PAPER_MODE ? getPaperStats() : null;
@@ -238,6 +286,31 @@ async function main() {
       ].filter(x => x !== null);
 
       renderScreen(lines.join("\n") + "\n");
+
+      appendCsvRow(`./logs/${LOG_PREFIX}validation_signals.csv`, validationHeader, [
+        new Date().toISOString(),
+        snap.ticker ?? "",
+        WINDOW_MIN,
+        timeLeftMin0.toFixed(3),
+        regimeInfo.regime,
+        rec.action,
+        rec.side,
+        rec.reason ?? rec.phase,
+        timeAware.adjustedUp,
+        timeAware.adjustedDown,
+        marketYes,
+        marketNo,
+        snap.prices.yesBid,
+        marketYes,
+        snap.prices.noBid,
+        marketNo,
+        spread,
+        edge.edgeUp,
+        edge.edgeDown,
+        priceToBeat,
+        spotPrice ?? lastPrice,
+        "kalshi_cf_benchmarks"
+      ]);
 
     } catch (err) {
       process.stdout.write(`[kalshi] Erro: ${err.message}\n`);
