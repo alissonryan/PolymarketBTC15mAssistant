@@ -2,8 +2,9 @@ import fs from "node:fs";
 import path from "node:path";
 import { canTrade } from "../risk/guard.js";
 
-const POSITION_FILE = path.join(process.cwd(), "logs", "paper_position.json");
-const HISTORY_FILE  = path.join(process.cwd(), "logs", "paper_trades.json");
+const _prefix = process.env.PAPER_LOG_PREFIX || "";
+const POSITION_FILE = path.join(process.cwd(), "logs", `${_prefix}paper_position.json`);
+const HISTORY_FILE  = path.join(process.cwd(), "logs", `${_prefix}paper_trades.json`);
 
 // Preço da Binance latched no início de cada janela de mercado
 // Usado em vez do Chainlink (que pode ficar congelado por horas em baixa volatilidade)
