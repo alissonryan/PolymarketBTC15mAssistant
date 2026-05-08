@@ -1,117 +1,223 @@
 # Polymarket BTC 15m Assistant
 
-A real-time console trading assistant for Polymarket **"Bitcoin Up or Down" 15-minute** markets.
+Console assistant for short-duration crypto prediction markets, focused on:
 
-It combines:
-- Polymarket market selection + UP/DOWN prices + liquidity
-- Polymarket live WS **Chainlink BTC/USD CURRENT PRICE** (same feed shown on the Polymarket UI)
-- Fallback to on-chain Chainlink (Polygon) via HTTP/WSS RPC
-- Binance spot price for reference
-- Short-term TA snapshot (Heiken Ashi, RSI, MACD, VWAP, Delta 1/3m)
-- A simple live **Predict (LONG/SHORT %)** derived from the assistant’s current TA scoring
+- Polymarket BTC Up/Down 5m and 15m markets
+- Kalshi BTC/ETH/SOL 15m paper trading adapters
+- Paper-first validation before any real execution
+
+The bot combines Polymarket/Kalshi market data, Chainlink/Polymarket live reference prices, Binance spot/trade data, short-term technical indicators, CVD/order-flow signals, regime detection, risk guards, and paper-trading logs.
+
+Important: the on-screen LONG/SHORT value is a heuristic score, not a calibrated probability. Treat it as a signal candidate until paper/replay proves positive expected value after spread, slippage, and fees.
+
+## Current Safety Mode
+
+The recommended mode is still paper trading:
+
+```bash
+EXECUTE_ORDERS=false PAPER_TRADING=true npm start
+```
+
+Do not enable real execution until paper results are positive and auditable.
+
+Recommended `.env` baseline:
+
+```env
+EXECUTE_ORDERS=false
+PAPER_TRADING=true
+RISK_ORDER_SIZE_USDC=5
+RISK_MAX_DAILY_LOSS_USDC=25
+RISK_MAX_OPEN_POSITIONS=1
+RISK_MIN_EDGE=0.15
+RISK_MIN_TOKEN_PRICE=0.30
+RISK_SESSION_START_UTC=8
+RISK_SESSION_END_UTC=23
+RISK_TAKER_FEE_RATE=0.07
+```
+
+## What The Bot Does
+
+- Auto-selects the latest Polymarket BTC Up/Down market unless a slug is pinned.
+- Reads Polymarket CLOB order books and uses executable buy prices based on ask-side liquidity.
+- Tracks Polymarket live Chainlink BTC/USD price and falls back to Chainlink/Polygon RPC when needed.
+- Uses Binance spot/trades for reference indicators, not as the official Polymarket settlement source.
+- Computes VWAP, RSI, MACD, Heiken Ashi, CVD, Time-Price Convergence, and regime labels.
+- Runs paper trading with saved positions/trades and a local analyzer.
+- Supports Kalshi paper adapters for BTC, ETH, and SOL 15m markets.
+
+## Recent Changes
+
+Recent work by Alisson Ryan on this branch:
+
+- Added Kalshi paper trading adapter for BTC/ETH/SOL 15m markets.
+- Fixed Kalshi adapter URL, status filtering, and price fields.
+- Added `RISK_MIN_TOKEN_PRICE`.
+- Added CVD, Time-Price Convergence, and Lock Strategy components.
+- Added paper trading, execution/risk layers, and Chainlink oracle handling.
+- Added proxy support for HTTP and WebSocket requests.
+
+Latest local changes in this commit:
+
+- Polymarket entry pricing now uses executable ask-side prices instead of treating bid as the buy price.
+- Paper trading now accepts venue reference/settlement prices and records `oracleSource`.
+- Paper P&L now supports taker fee estimation through `RISK_TAKER_FEE_RATE`.
+- Added validation log `logs/paper_validation_signals.csv`.
+- Added `npm run analyze:paper`.
+- Added Node test coverage for risk guard, executable pricing, paper reference price, and fee math.
+- Renamed visible "Predict/Prob" wording to "Score" because the signal is not calibrated probability.
+- Ignored local `.claude/` settings.
 
 ## Requirements
 
-- Node.js **18+** (https://nodejs.org/en)
-- npm (comes with Node)
+- Node.js 18+
+- npm
 
-
-## Run from terminal (step-by-step)
-
-### 1) Clone the repository
-
-```bash
-git clone https://github.com/FrondEnt/PolymarketBTC15mAssistant.git
-```
-
-Alternative (no git):
-
-- Click the green `<> Code` button on GitHub
-- Choose `Download ZIP`
-- Extract the ZIP
-- Open a terminal in the extracted project folder
-
-Then open a terminal in the project folder.
-
-### 2) Install dependencies
+Install dependencies:
 
 ```bash
 npm install
 ```
 
-### 3) (Optional) Set environment variables
+## Run Polymarket Paper Trading
 
-You can run without extra config (defaults are included), but for more stable Chainlink fallback it’s recommended to set at least one Polygon RPC.
+Default 15m:
 
-#### Windows PowerShell (current terminal session)
-
-```powershell
-$env:POLYGON_RPC_URL = "https://polygon-rpc.com"
-$env:POLYGON_RPC_URLS = "https://polygon-rpc.com,https://rpc.ankr.com/polygon"
-$env:POLYGON_WSS_URLS = "wss://polygon-bor-rpc.publicnode.com"
+```bash
+EXECUTE_ORDERS=false PAPER_TRADING=true npm start
 ```
 
-Optional Polymarket settings:
+5m:
 
-```powershell
-$env:POLYMARKET_AUTO_SELECT_LATEST = "true"
-# $env:POLYMARKET_SLUG = "btc-updown-15m-..."   # pin a specific market
+```bash
+EXECUTE_ORDERS=false PAPER_TRADING=true CANDLE_WINDOW_MINUTES=5 npm start
 ```
 
-#### Windows CMD (current terminal session)
+Pin a specific Polymarket market:
 
-```cmd
-set POLYGON_RPC_URL=https://polygon-rpc.com
-set POLYGON_RPC_URLS=https://polygon-rpc.com,https://rpc.ankr.com/polygon
-set POLYGON_WSS_URLS=wss://polygon-bor-rpc.publicnode.com
+```bash
+POLYMARKET_SLUG=btc-updown-15m-... EXECUTE_ORDERS=false PAPER_TRADING=true npm start
 ```
 
-Optional Polymarket settings:
+## Run Kalshi Paper Trading
 
-```cmd
-set POLYMARKET_AUTO_SELECT_LATEST=true
-REM set POLYMARKET_SLUG=btc-updown-15m-...
+BTC:
+
+```bash
+EXECUTE_ORDERS=false PAPER_TRADING=true npm run kalshi:btc
 ```
 
-Notes:
-- These environment variables apply only to the current terminal window.
-- If you want permanent env vars, set them via Windows System Environment Variables or use a `.env` loader of your choice.
+ETH:
+
+```bash
+EXECUTE_ORDERS=false PAPER_TRADING=true npm run kalshi:eth
+```
+
+SOL:
+
+```bash
+EXECUTE_ORDERS=false PAPER_TRADING=true npm run kalshi:sol
+```
+
+Kalshi requires API credentials in `.env` for market reads:
+
+```env
+KALSHI_API_KEY_ID=...
+KALSHI_PRIVATE_KEY_PATH=./kalshi_private.pem
+KALSHI_DEMO=false
+```
+
+Private keys and `.env` files are ignored by git.
+
+## Validation Commands
+
+Run tests:
+
+```bash
+npm test
+```
+
+Syntax checks:
+
+```bash
+node --check src/index.js
+node --check src/index-kalshi.js
+node --check src/data/polymarket.js
+node --check src/execution/paperTrading.js
+node --check src/execution/paperMath.js
+node --check scripts/analyze-paper.js
+```
+
+Analyze paper trades:
+
+```bash
+npm run analyze:paper
+```
+
+Analyze a specific paper trade file:
+
+```bash
+node scripts/analyze-paper.js logs/paper_trades.json
+```
+
+The analyzer reports:
+
+- total trades
+- wins/losses/win rate
+- gross P&L, fees, net P&L
+- ROI and average P&L
+- breakdown by side, UTC session, time-left bucket, edge bucket, and spread bucket
+
+## Logs
+
+Runtime logs are written under `logs/` and are ignored by git.
+
+Important files:
+
+- `logs/signals.csv`: legacy signal stream, kept stable for compatibility.
+- `logs/paper_validation_signals.csv`: richer validation stream with bid/ask/spread, score, edge, reference price, current price, and oracle source.
+- `logs/paper_position.json`: current paper position.
+- `logs/paper_trades.json`: settled paper trades.
+- `logs/daily_pnl.json`: real-execution daily P&L guard state.
+
+Existing old paper logs may not contain all new fields. New trades will include the richer validation fields.
 
 ## Configuration
 
-This project reads configuration from environment variables.
-
-You can set them in your shell, or create a `.env` file and load it using your preferred method.
-
 ### Polymarket
 
-- `POLYMARKET_AUTO_SELECT_LATEST` (default: `true`)
-  - When `true`, automatically picks the latest 15m market.
-- `POLYMARKET_SERIES_ID` (default: `10192`)
-- `POLYMARKET_SERIES_SLUG` (default: `btc-up-or-down-15m`)
-- `POLYMARKET_SLUG` (optional)
-  - If set, the assistant will target a specific market slug.
-- `POLYMARKET_LIVE_WS_URL` (default: `wss://ws-live-data.polymarket.com`)
+- `CANDLE_WINDOW_MINUTES`: `15` by default. Set `5` for 5m markets.
+- `POLYMARKET_AUTO_SELECT_LATEST`: default `true`.
+- `POLYMARKET_SERIES_ID`: defaults to `10192` for 15m and `10684` for 5m.
+- `POLYMARKET_SERIES_SLUG`: defaults to `btc-up-or-down-15m` or `btc-up-or-down-5m`.
+- `POLYMARKET_SLUG`: optional pinned market slug.
+- `POLYMARKET_LIVE_WS_URL`: default `wss://ws-live-data.polymarket.com`.
+- `POLYMARKET_UP_LABEL`: default `Up`.
+- `POLYMARKET_DOWN_LABEL`: default `Down`.
 
-### Chainlink on Polygon (fallback)
+### Chainlink / Polygon
 
-- `CHAINLINK_BTC_USD_AGGREGATOR`
-  - Default: `0xc907E116054Ad103354f2D350FD2514433D57F6f`
+- `CHAINLINK_BTC_USD_AGGREGATOR`: BTC/USD aggregator address.
+- `POLYGON_RPC_URL`: default `https://polygon-rpc.com`.
+- `POLYGON_RPC_URLS`: comma-separated HTTP RPC fallbacks.
+- `POLYGON_WSS_URL`: optional WSS RPC.
+- `POLYGON_WSS_URLS`: comma-separated WSS RPC fallbacks.
 
-HTTP RPC:
-- `POLYGON_RPC_URL` (default: `https://polygon-rpc.com`)
-- `POLYGON_RPC_URLS` (optional, comma-separated)
-  - Example: `https://polygon-rpc.com,https://rpc.ankr.com/polygon`
+### Risk
 
-WSS RPC (optional but recommended for more real-time fallback):
-- `POLYGON_WSS_URL` (optional)
-- `POLYGON_WSS_URLS` (optional, comma-separated)
+- `EXECUTE_ORDERS`: must stay `false` while validating.
+- `PAPER_TRADING`: set `true` for paper mode.
+- `RISK_ORDER_SIZE_USDC`: paper/real order size.
+- `RISK_MAX_DAILY_LOSS_USDC`: circuit breaker limit.
+- `RISK_MAX_OPEN_POSITIONS`: default `1`.
+- `RISK_MIN_EDGE`: default `0.15`.
+- `RISK_MIN_TOKEN_PRICE`: default `0.30`.
+- `RISK_SESSION_START_UTC`: default `8`.
+- `RISK_SESSION_END_UTC`: default `23`.
+- `RISK_TAKER_FEE_RATE`: default `0.07`, used for paper fee estimation.
 
-### Proxy support
+### Proxy
 
-The bot supports HTTP(S) proxies for both HTTP requests (fetch) and WebSocket connections.
-
-Supported env vars (standard):
+The bot supports standard proxy environment variables:
 
 - `HTTPS_PROXY` / `https_proxy`
 - `HTTP_PROXY` / `http_proxy`
@@ -119,85 +225,38 @@ Supported env vars (standard):
 
 Examples:
 
-PowerShell:
-
-```powershell
-$env:HTTPS_PROXY = "http://127.0.0.1:8080"
-# or
-$env:ALL_PROXY = "socks5://127.0.0.1:1080"
+```bash
+HTTPS_PROXY=http://127.0.0.1:8080 npm start
+ALL_PROXY=socks5://127.0.0.1:1080 npm start
 ```
 
-CMD:
-
-```cmd
-set HTTPS_PROXY=http://127.0.0.1:8080
-REM or
-set ALL_PROXY=socks5://127.0.0.1:1080
-```
-
-#### Proxy with username + password (simple guide)
-
-1) Take your proxy host and port (example: `1.2.3.4:8080`).
-
-2) Add your login and password in the URL:
-
-- HTTP/HTTPS proxy:
-  - `http://USERNAME:PASSWORD@HOST:PORT`
-- SOCKS5 proxy:
-  - `socks5://USERNAME:PASSWORD@HOST:PORT`
-
-3) Set it in the terminal and run the bot.
-
-PowerShell:
-
-```powershell
-$env:HTTPS_PROXY = "http://USERNAME:PASSWORD@HOST:PORT"
-npm start
-```
-
-CMD:
-
-```cmd
-set HTTPS_PROXY=http://USERNAME:PASSWORD@HOST:PORT
-npm start
-```
-
-Important: if your password contains special characters like `@` or `:` you must URL-encode it.
-
-Example:
-
-- password: `p@ss:word`
-- encoded: `p%40ss%3Aword`
-- proxy URL: `http://user:p%40ss%3Aword@1.2.3.4:8080`
-
-## Run
+For credentials, URL-encode special characters:
 
 ```bash
-npm start
+HTTPS_PROXY=http://USERNAME:PASSWORD@HOST:PORT npm start
 ```
 
-### Stop
+## Real Execution
 
-Press `Ctrl + C` in the terminal.
+Real execution code exists, but it should remain disabled during strategy validation.
 
-### Update to latest version
+Before enabling `EXECUTE_ORDERS=true`, require at minimum:
 
-```bash
-git pull
-npm install
-npm start
-```
+- paper trading with realistic entry price using ask-side liquidity
+- venue-correct reference/settlement price
+- positive net P&L after fee estimate
+- enough trades to evaluate by session, spread, edge bucket, and time-left bucket
+- no unresolved bugs in pricing, settlement, or logs
 
-## Notes / Troubleshooting
+## Troubleshooting
 
-- If you see no Chainlink updates:
-  - Polymarket WS might be temporarily unavailable. The bot falls back to Chainlink on-chain price via Polygon RPC.
-  - Ensure at least one working Polygon RPC URL is configured.
-- If the console looks like it “spams” lines:
-  - The renderer uses `readline.cursorTo` + `clearScreenDown` for a stable, static screen, but some terminals may still behave differently.
+- If no Chainlink updates appear, Polymarket live WS may be unavailable; the bot falls back through configured Chainlink/Polygon sources.
+- If paper trades show `unknown` for spread or time-left, they were likely created before the latest validation fields were added.
+- If Kalshi fails with authentication errors, check `KALSHI_API_KEY_ID` and `KALSHI_PRIVATE_KEY_PATH`.
+- If the console appears to spam output, your terminal may not handle `readline.cursorTo` and `clearScreenDown` cleanly.
 
 ## Safety
 
-This is not financial advice. Use at your own risk.
+This is not financial advice. Short-duration binary markets are highly adversarial, spread-sensitive, and latency-sensitive. Keep real orders disabled until the paper logs prove the strategy under realistic assumptions.
 
-created by @krajekis
+Created by @krajekis. Maintained locally by Alisson Ryan.

@@ -223,7 +223,7 @@ async function main() {
         "",
         kv("Sinal:", `${recColor}${rec.action === "ENTER" ? `${rec.side} (${rec.phase})` : `NO TRADE (${rec.reason ?? rec.phase})`}${ANSI.reset}`),
         kv("Edge:", `${ANSI.white}↑${colorPct(edge.edgeUp)} ↓${colorPct(edge.edgeDown)}${ANSI.reset}`),
-        kv("Prob:", `${ANSI.green}YES ${(timeAware.adjustedUp * 100).toFixed(0)}%${ANSI.reset} / ${ANSI.red}NO ${(timeAware.adjustedDown * 100).toFixed(0)}%${ANSI.reset}`),
+        kv("Score:", `${ANSI.green}YES ${(timeAware.adjustedUp * 100).toFixed(0)}%${ANSI.reset} / ${ANSI.red}NO ${(timeAware.adjustedDown * 100).toFixed(0)}%${ANSI.reset}`),
         "",
         sep(),
         "",

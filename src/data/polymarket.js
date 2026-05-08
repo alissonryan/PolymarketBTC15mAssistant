@@ -144,7 +144,7 @@ export function filterBtcUpDown15mMarkets(markets, { seriesSlug, slugPrefix } = 
 export async function fetchClobPrice({ tokenId, side }) {
   const url = new URL("/price", CONFIG.clobBaseUrl);
   url.searchParams.set("token_id", tokenId);
-  url.searchParams.set("side", side);
+  url.searchParams.set("side", String(side).toUpperCase());
 
   const res = await fetch(url);
   if (!res.ok) {
@@ -152,6 +152,10 @@ export async function fetchClobPrice({ tokenId, side }) {
   }
   const data = await res.json();
   return toNumber(data.price);
+}
+
+export function getExecutableBuyPrice(bookSummary, fallback = null) {
+  return bookSummary?.bestAsk ?? fallback ?? null;
 }
 
 export async function fetchOrderBook({ tokenId }) {

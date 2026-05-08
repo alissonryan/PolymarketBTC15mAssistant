@@ -288,17 +288,17 @@ async function fetchPolymarketSnapshot() {
   let downBookSummary = { bestBid: null, bestAsk: null, spread: null, bidLiquidity: null, askLiquidity: null };
 
   try {
-    const [yesBuy, noBuy, upBook, downBook] = await Promise.all([
-      fetchClobPrice({ tokenId: upTokenId, side: "buy" }),
-      fetchClobPrice({ tokenId: downTokenId, side: "buy" }),
+    const [upAsk, downAsk, upBook, downBook] = await Promise.all([
+      fetchClobPrice({ tokenId: upTokenId, side: "SELL" }),
+      fetchClobPrice({ tokenId: downTokenId, side: "SELL" }),
       fetchOrderBook({ tokenId: upTokenId }),
       fetchOrderBook({ tokenId: downTokenId })
     ]);
 
-    upBuy = yesBuy;
-    downBuy = noBuy;
     upBookSummary = summarizeOrderBook(upBook);
     downBookSummary = summarizeOrderBook(downBook);
+    upBuy = upBookSummary.bestAsk ?? upAsk;
+    downBuy = downBookSummary.bestAsk ?? downAsk;
   } catch {
     upBuy = null;
     downBuy = null;
@@ -362,6 +362,31 @@ async function main() {
     "edge_up",
     "edge_down",
     "recommendation"
+  ];
+
+  const validationHeader = [
+    "timestamp",
+    "market_slug",
+    "window_minutes",
+    "time_left_min",
+    "regime",
+    "action",
+    "side",
+    "reason",
+    "score_up",
+    "score_down",
+    "entry_price_up",
+    "entry_price_down",
+    "up_best_bid",
+    "up_best_ask",
+    "down_best_bid",
+    "down_best_ask",
+    "spread",
+    "edge_up",
+    "edge_down",
+    "price_to_beat",
+    "current_price",
+    "oracle_source"
   ];
 
   while (true) {
@@ -507,7 +532,7 @@ async function main() {
         ? (pLong > pShort ? "LONG" : pShort > pLong ? "SHORT" : "NEUTRAL")
         : "NEUTRAL";
       const predictValue = `${ANSI.green}LONG${ANSI.reset} ${ANSI.green}${formatProbPct(pLong, 0)}${ANSI.reset} / ${ANSI.red}SHORT${ANSI.reset} ${ANSI.red}${formatProbPct(pShort, 0)}${ANSI.reset}`;
-      const predictLine = `Predict: ${predictValue}`;
+      const predictLine = `Score: ${predictValue}`;
 
       const marketUpStr = `${marketUp ?? "-"}${marketUp === null || marketUp === undefined ? "" : "¢"}`;
       const marketDownStr = `${marketDown ?? "-"}${marketDown === null || marketDown === undefined ? "" : "¢"}`;
@@ -643,7 +668,7 @@ async function main() {
         "",
         sepLine(),
         "",
-        kv("TA Predict:", predictValue),
+        kv("TA Score:", predictValue),
         kv("Heiken Ashi:", heikenLine.split(": ").slice(1).join(": ") || heikenLine),
         kv("RSI:", rsiLine.split(": ").slice(1).join(": ") || rsiLine),
         kv("MACD:", macdLine.split(": ").slice(1).join(": ") || macdLine),
@@ -678,7 +703,15 @@ async function main() {
 
       // ── Paper Trading ─────────────────────────────────────────────────────
       const paperResult = PAPER_MODE && !EXECUTE_MODE
-        ? onPaperTick({ rec, poly, spotPrice, timeLeftMin })
+        ? onPaperTick({
+          rec,
+          poly,
+          spotPrice,
+          referencePrice: priceToBeat,
+          settlementPrice: currentPrice,
+          oracleSource: chainlink?.source ?? null,
+          timeLeftMin
+        })
         : null;
 
       const paperStats = PAPER_MODE ? getPaperStats() : null;
@@ -783,6 +816,31 @@ async function main() {
         edge.edgeUp,
         edge.edgeDown,
         rec.action === "ENTER" ? `${rec.side}:${rec.phase}:${rec.strength}` : "NO_TRADE"
+      ]);
+
+      appendCsvRow("./logs/paper_validation_signals.csv", validationHeader, [
+        new Date().toISOString(),
+        marketSlug,
+        CONFIG.candleWindowMinutes,
+        timeLeftMin.toFixed(3),
+        regimeInfo.regime,
+        rec.action,
+        rec.side,
+        rec.reason ?? rec.phase,
+        timeAware.adjustedUp,
+        timeAware.adjustedDown,
+        marketUp,
+        marketDown,
+        poly.ok ? poly.orderbook.up.bestBid : null,
+        poly.ok ? poly.orderbook.up.bestAsk : null,
+        poly.ok ? poly.orderbook.down.bestBid : null,
+        poly.ok ? poly.orderbook.down.bestAsk : null,
+        spread,
+        edge.edgeUp,
+        edge.edgeDown,
+        priceToBeat,
+        currentPrice,
+        chainlink?.source ?? null
       ]);
     } catch (err) {
       console.log("────────────────────────────");

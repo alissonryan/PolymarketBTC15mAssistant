@@ -1,6 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { canTrade } from "../risk/guard.js";
+import { estimateTakerFee } from "./paperMath.js";
 
 const _prefix = process.env.PAPER_LOG_PREFIX || "";
 const POSITION_FILE = path.join(process.cwd(), "logs", `${_prefix}paper_position.json`);
@@ -19,7 +20,13 @@ const EMPTY_POSITION = {
   priceToBeat: null,
   marketSlug: null,
   enteredAt: null,
-  edgeAtEntry: null
+  edgeAtEntry: null,
+  oracleSource: null,
+  entryTimeLeftMin: null,
+  bestBidAtEntry: null,
+  bestAskAtEntry: null,
+  spreadAtEntry: null,
+  feeAtEntry: 0
 };
 
 // ─── persistência ────────────────────────────────────────────────────────────
@@ -80,19 +87,20 @@ export function getPaperPosition() {
 
 // Chamado a cada tick do loop principal
 // spotPrice = preço Binance WebSocket (sempre atualizado, nunca congela)
-export function onPaperTick({ rec, poly, spotPrice, timeLeftMin }) {
+export function onPaperTick({ rec, poly, spotPrice, referencePrice = null, settlementPrice = null, oracleSource = null, timeLeftMin }) {
   const marketSlug = poly.ok ? (poly.market?.slug ?? null) : null;
-
-  // ── Latch do preço Binance no início de cada janela ───────────────────────
-  if (marketSlug && marketSlug !== _paperPtbSlug) {
-    _paperPtbSlug = marketSlug;
-    _paperPtbPrice = spotPrice ?? null;
-  }
+  const marketReferencePrice = referencePrice ?? poly.referencePrice ?? spotPrice ?? null;
+  const marketSettlementPrice = settlementPrice ?? referencePrice ?? poly.referencePrice ?? spotPrice ?? null;
 
   // ── 1. Detecta liquidação: mercado mudou de slug ──────────────────────────
   if (_pos.open && marketSlug && _pos.marketSlug && _pos.marketSlug !== marketSlug) {
-    // spotPrice = preço Binance no início da nova janela ≈ fim da janela anterior
-    _settlePosition(spotPrice);
+    _settlePosition(marketSettlementPrice);
+  }
+
+  // ── Latch da referência oficial/preferida no início de cada janela ─────────
+  if (marketSlug && marketSlug !== _paperPtbSlug) {
+    _paperPtbSlug = marketSlug;
+    _paperPtbPrice = marketReferencePrice;
   }
 
   // ── 2. Sem posição aberta: avalia entrada ─────────────────────────────────
@@ -107,6 +115,8 @@ export function onPaperTick({ rec, poly, spotPrice, timeLeftMin }) {
 
     const orderSize = Number(process.env.RISK_ORDER_SIZE_USDC ?? 5);
     const entryPrice = rec.side === "UP" ? poly.prices?.up : poly.prices?.down;
+    const bookSide = rec.side === "UP" ? poly.orderbook?.up : poly.orderbook?.down;
+    const feeAtEntry = estimateTakerFee({ usdcAmount: orderSize, entryPrice });
 
     if (!entryPrice || entryPrice <= 0) {
       return { mode: "waiting", reason: "preco_polymarket_indisponivel" };
@@ -123,10 +133,16 @@ export function onPaperTick({ rec, poly, spotPrice, timeLeftMin }) {
       side: rec.side,
       entryPrice,
       usdcAmount: orderSize,
-      priceToBeat: _paperPtbPrice,   // preço Binance no início da janela
+      priceToBeat: _paperPtbPrice,
       marketSlug,
       enteredAt: new Date().toISOString(),
-      edgeAtEntry: edgeBest
+      edgeAtEntry: edgeBest,
+      oracleSource: oracleSource ?? "unknown",
+      entryTimeLeftMin: Number.isFinite(Number(timeLeftMin)) ? Number(timeLeftMin) : null,
+      bestBidAtEntry: bookSide?.bestBid ?? null,
+      bestAskAtEntry: bookSide?.bestAsk ?? null,
+      spreadAtEntry: bookSide?.spread ?? null,
+      feeAtEntry
     };
     savePos();
 
@@ -145,7 +161,8 @@ export function onPaperTick({ rec, poly, spotPrice, timeLeftMin }) {
 
 function _settlePosition(settlementChainlinkPrice) {
   const won = _determineWinner(_pos.side, _pos.priceToBeat, settlementChainlinkPrice);
-  const pnl = calcPnl(_pos.usdcAmount, _pos.entryPrice, won);
+  const grossPnl = calcPnl(_pos.usdcAmount, _pos.entryPrice, won);
+  const pnl = parseFloat((grossPnl - (_pos.feeAtEntry ?? 0)).toFixed(4));
 
   const trade = {
     side:             _pos.side,
@@ -154,8 +171,15 @@ function _settlePosition(settlementChainlinkPrice) {
     priceToBeat:      _pos.priceToBeat,
     settlementPrice:  settlementChainlinkPrice,
     won,
+    grossPnl,
+    feeAtEntry:       _pos.feeAtEntry ?? 0,
     pnl,
     edgeAtEntry:      _pos.edgeAtEntry,
+    oracleSource:     _pos.oracleSource,
+    entryTimeLeftMin: _pos.entryTimeLeftMin,
+    bestBidAtEntry:   _pos.bestBidAtEntry,
+    bestAskAtEntry:   _pos.bestAskAtEntry,
+    spreadAtEntry:    _pos.spreadAtEntry,
     marketSlug:       _pos.marketSlug,
     enteredAt:        _pos.enteredAt,
     settledAt:        new Date().toISOString()

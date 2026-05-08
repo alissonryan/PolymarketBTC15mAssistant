@@ -45,13 +45,20 @@ export function isCircuitBreakerTripped() {
 }
 
 export function canTrade({ openPositions = 0, edgeBest = 0, tokenPrice = null }) {
-  const minEdge = Number(process.env.RISK_MIN_EDGE ?? 0.08);
+  const minEdge = Number(process.env.RISK_MIN_EDGE ?? 0.15);
   const maxOpen = Number(process.env.RISK_MAX_OPEN_POSITIONS ?? 1);
   const orderSize = Number(process.env.RISK_ORDER_SIZE_USDC ?? 5);
   const minTokenPrice = Number(process.env.RISK_MIN_TOKEN_PRICE ?? 0.30);
+  const sessionStartUTC = Number(process.env.RISK_SESSION_START_UTC ?? 8);
+  const sessionEndUTC   = Number(process.env.RISK_SESSION_END_UTC   ?? 23);
 
   if (isCircuitBreakerTripped()) {
     return { allowed: false, reason: "circuit_breaker_perda_diaria_maxima" };
+  }
+
+  const utcHour = new Date().getUTCHours();
+  if (utcHour < sessionStartUTC || utcHour >= sessionEndUTC) {
+    return { allowed: false, reason: `sessao_bloqueada_fora_janela_${sessionStartUTC}h-${sessionEndUTC}h_utc` };
   }
 
   if (openPositions >= maxOpen) {
