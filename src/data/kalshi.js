@@ -3,7 +3,7 @@ import fs from "node:fs";
 
 const BASE_URL = process.env.KALSHI_DEMO === "true"
   ? "https://external-api.demo.kalshi.co/trade-api/v2"
-  : "https://api.kalshi.com/trade-api/v2";
+  : "https://external-api.kalshi.com/trade-api/v2";
 
 function loadPrivateKey() {
   const keyPath = process.env.KALSHI_PRIVATE_KEY_PATH;
@@ -50,7 +50,7 @@ async function kalshiGet(path) {
 
 // Returns the most recently opened market for a given series (e.g. KXBTC15M)
 export async function fetchKalshiActiveMarket(seriesTicker) {
-  const path = `/markets?series_ticker=${seriesTicker}&status=active&limit=10`;
+  const path = `/markets?series_ticker=${seriesTicker}&status=open&limit=10`;
   const data = await kalshiGet(path);
   const markets = data.markets ?? [];
   if (markets.length === 0) return null;
@@ -69,10 +69,11 @@ export async function fetchKalshiSnapshot(seriesTicker) {
     const market = await fetchKalshiActiveMarket(seriesTicker);
     if (!market) return { ok: false, reason: "no_active_market" };
 
-    const yesBuy  = parseFloat(market.yes_ask_dollars)  || null;
-    const noBuy   = parseFloat(market.no_ask_dollars)   || null;
-    const yesBid  = parseFloat(market.yes_bid_dollars)  || null;
-    const noBid   = parseFloat(market.no_bid_dollars)   || null;
+    // Kalshi returns prices as decimal strings in yes_ask_dollars / no_ask_dollars
+    const yesBuy  = market.yes_ask_dollars != null ? parseFloat(market.yes_ask_dollars) : null;
+    const noBuy   = market.no_ask_dollars  != null ? parseFloat(market.no_ask_dollars)  : null;
+    const yesBid  = market.yes_bid_dollars != null ? parseFloat(market.yes_bid_dollars) : null;
+    const noBid   = market.no_bid_dollars  != null ? parseFloat(market.no_bid_dollars)  : null;
 
     const closeTime = market.close_time ? new Date(market.close_time).getTime() : null;
     const openTime  = market.open_time  ? new Date(market.open_time).getTime()  : null;
@@ -88,6 +89,9 @@ export async function fetchKalshiSnapshot(seriesTicker) {
         yesBid,
         noBid
       },
+      // floor_strike = preço de referência do CF Benchmarks no início da janela
+      // equivalente ao priceToBeat na Polymarket
+      floorStrike: market.floor_strike ?? null,
       endTime:   closeTime,
       startTime: openTime
     };

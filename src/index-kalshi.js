@@ -95,11 +95,12 @@ async function main() {
       const timeLeftMin  = snap.endTime ? (snap.endTime - nowMs) / 60_000 : WINDOW_MIN;
       const timeLeftMin0 = Math.max(0, timeLeftMin);
 
-      // ── price-to-beat latch ──────────────────────────────────────────────────
+      // Kalshi fornece o floor_strike = preço de referência oficial CF Benchmarks
+      // Mais confiável que latchear o spot da Binance
+      const priceToBeat = snap.floorStrike ?? (priceToBeatState.ticker === snap.ticker ? priceToBeatState.value : null);
       if (snap.ticker !== priceToBeatState.ticker) {
         priceToBeatState = { ticker: snap.ticker, value: spotPrice ?? lastPrice };
       }
-      const priceToBeat = priceToBeatState.ticker === snap.ticker ? priceToBeatState.value : null;
 
       // ── indicadores ─────────────────────────────────────────────────────────
       const closes    = klines1m.map(c => c.close);
