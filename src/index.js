@@ -861,45 +861,47 @@ async function main() {
       prevSpotPrice = spotPrice ?? prevSpotPrice;
       prevCurrentPrice = currentPrice ?? prevCurrentPrice;
 
-      appendCsvRow("./logs/signals.csv", header, [
-        new Date().toISOString(),
-        timing.elapsedMinutes.toFixed(3),
-        timeLeftMin.toFixed(3),
-        regimeInfo.regime,
-        signal,
-        timeAware.adjustedUp,
-        timeAware.adjustedDown,
-        marketUp,
-        marketDown,
-        edge.edgeUp,
-        edge.edgeDown,
-        rec.action === "ENTER" ? `${rec.side}:${rec.phase}:${rec.strength}` : "NO_TRADE"
-      ]);
+      if ((process.env.SIGNAL_LOG ?? "false").toLowerCase() === "true") {
+        appendCsvRow("./logs/signals.csv", header, [
+          new Date().toISOString(),
+          timing.elapsedMinutes.toFixed(3),
+          timeLeftMin.toFixed(3),
+          regimeInfo.regime,
+          signal,
+          timeAware.adjustedUp,
+          timeAware.adjustedDown,
+          marketUp,
+          marketDown,
+          edge.edgeUp,
+          edge.edgeDown,
+          rec.action === "ENTER" ? `${rec.side}:${rec.phase}:${rec.strength}` : "NO_TRADE"
+        ]);
 
-      appendCsvRow("./logs/paper_validation_signals.csv", validationHeader, [
-        new Date().toISOString(),
-        marketSlug,
-        CONFIG.candleWindowMinutes,
-        timeLeftMin.toFixed(3),
-        regimeInfo.regime,
-        rec.action,
-        rec.side,
-        rec.reason ?? rec.phase,
-        timeAware.adjustedUp,
-        timeAware.adjustedDown,
-        marketUp,
-        marketDown,
-        poly.ok ? poly.orderbook.up.bestBid : null,
-        poly.ok ? poly.orderbook.up.bestAsk : null,
-        poly.ok ? poly.orderbook.down.bestBid : null,
-        poly.ok ? poly.orderbook.down.bestAsk : null,
-        spread,
-        edge.edgeUp,
-        edge.edgeDown,
-        priceToBeat,
-        currentPrice,
-        chainlink?.source ?? null
-      ]);
+        appendCsvRow("./logs/paper_validation_signals.csv", validationHeader, [
+          new Date().toISOString(),
+          marketSlug,
+          CONFIG.candleWindowMinutes,
+          timeLeftMin.toFixed(3),
+          regimeInfo.regime,
+          rec.action,
+          rec.side,
+          rec.reason ?? rec.phase,
+          timeAware.adjustedUp,
+          timeAware.adjustedDown,
+          marketUp,
+          marketDown,
+          poly.ok ? poly.orderbook.up.bestBid : null,
+          poly.ok ? poly.orderbook.up.bestAsk : null,
+          poly.ok ? poly.orderbook.down.bestBid : null,
+          poly.ok ? poly.orderbook.down.bestAsk : null,
+          spread,
+          edge.edgeUp,
+          edge.edgeDown,
+          priceToBeat,
+          currentPrice,
+          chainlink?.source ?? null
+        ]);
+      }
     } catch (err) {
       console.log("────────────────────────────");
       console.log(`Error: ${err?.message ?? String(err)}`);

@@ -322,30 +322,32 @@ async function main() {
 
       renderScreen(lines.join("\n") + "\n");
 
-      appendCsvRow(`./logs/${LOG_PREFIX}validation_signals.csv`, validationHeader, [
-        new Date().toISOString(),
-        snap.ticker ?? "",
-        WINDOW_MIN,
-        timeLeftMin0.toFixed(3),
-        regimeInfo.regime,
-        rec.action,
-        rec.side,
-        rec.reason ?? rec.phase,
-        timeAware.adjustedUp,
-        timeAware.adjustedDown,
-        marketYes,
-        marketNo,
-        snap.prices.yesBid,
-        marketYes,
-        snap.prices.noBid,
-        marketNo,
-        spread,
-        edge.edgeUp,
-        edge.edgeDown,
-        priceToBeat,
-        spotPrice ?? lastPrice,
-        "kalshi_cf_benchmarks"
-      ]);
+      if ((process.env.SIGNAL_LOG ?? "false").toLowerCase() === "true") {
+        appendCsvRow(`./logs/${LOG_PREFIX}validation_signals.csv`, validationHeader, [
+          new Date().toISOString(),
+          snap.ticker ?? "",
+          WINDOW_MIN,
+          timeLeftMin0.toFixed(3),
+          regimeInfo.regime,
+          rec.action,
+          rec.side,
+          rec.reason ?? rec.phase,
+          timeAware.adjustedUp,
+          timeAware.adjustedDown,
+          marketYes,
+          marketNo,
+          snap.prices.yesBid,
+          marketYes,
+          snap.prices.noBid,
+          marketNo,
+          spread,
+          edge.edgeUp,
+          edge.edgeDown,
+          priceToBeat,
+          spotPrice ?? lastPrice,
+          "kalshi_cf_benchmarks"
+        ]);
+      }
 
     } catch (err) {
       process.stdout.write(`[kalshi] Erro: ${err.message}\n`);
