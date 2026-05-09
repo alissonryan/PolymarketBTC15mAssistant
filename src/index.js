@@ -14,6 +14,7 @@ import {
   summarizeOrderBook
 } from "./data/polymarket.js";
 import { computeMacroTrend } from "./engines/macroTrend.js";
+import { computeChop, computeBBWidth } from "./indicators/chop.js";
 import { computeVwapSeries } from "./indicators/vwap.js";
 import { computeRsi, computeRsiSeries, sma, slopeLast } from "./indicators/rsi.js";
 import { computeMacd } from "./indicators/macd.js";
@@ -478,6 +479,10 @@ async function main() {
         ? closes[closes.length - 1] < vwapNow && closes[closes.length - 2] > vwapSeries[vwapSeries.length - 2]
         : false;
 
+      // Choppiness Index and BB Width on 1m candles (60-bar = 1h lookback)
+      const chop = computeChop(candles, 60);
+      const bbWidthPct = computeBBWidth(closes, 20, 2);
+
       const regimeInfo = detectRegime({
         price: lastPrice,
         vwap: vwapNow,
@@ -545,6 +550,8 @@ async function main() {
         modelDown: timeAware.adjustedDown,
         regime: regimeInfo.regime,
         macroTrend: macroInfo.trend,
+        chop,
+        bbWidthPct,
         spreadUp,
         spreadDown
       });
@@ -695,6 +702,11 @@ async function main() {
       const macroEmaStr = macroInfo.ema50 !== null ? ` | EMA50=$${macroInfo.ema50.toFixed(0)}` : "";
       const macroDisplayLine = kv("Macro 1H:", `${macroColor}${macroInfo.trend}${ANSI.reset}${macroEmaStr}`);
 
+      // Choppiness + BB Width
+      const chopColor = chop === null ? ANSI.gray : chop > 61.8 ? ANSI.red : chop > 50 ? ANSI.yellow : ANSI.green;
+      const bbColor   = bbWidthPct === null ? ANSI.gray : bbWidthPct < 1.0 ? ANSI.red : bbWidthPct < 2.0 ? ANSI.yellow : ANSI.green;
+      const rangeDisplayLine = kv("Range filter:", `CHOP ${chopColor}${chop !== null ? chop.toFixed(1) : "-"}${ANSI.reset} | BB ${bbColor}${bbWidthPct !== null ? bbWidthPct.toFixed(2) : "-"}%${ANSI.reset}`);
+
       // TPC display
       const tpLine = tpField.inField
         ? kv("TPC:", `${tpField.direction === "UP" ? ANSI.green : ANSI.red}${tpField.direction} ${(tpField.probability * 100).toFixed(0)}% [${tpField.urgency}]${ANSI.reset}`)
@@ -720,6 +732,7 @@ async function main() {
         kv("VWAP:", vwapLine.split(": ").slice(1).join(": ") || vwapLine),
         cvdDisplayLine,
         macroDisplayLine,
+        rangeDisplayLine,
         tpLine,
         lockLine,
         "",

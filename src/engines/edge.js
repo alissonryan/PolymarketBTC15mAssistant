@@ -20,6 +20,9 @@ export function computeEdge({ modelUp, modelDown, marketYes, marketNo }) {
   };
 }
 
+const CHOP_RANGE_THRESHOLD  = Number(process.env.RISK_CHOP_THRESHOLD  ?? 61.8);
+const BB_WIDTH_MIN_PCT       = Number(process.env.RISK_BB_WIDTH_MIN    ?? 1.0);
+
 export function decide({
   remainingMinutes,
   edgeUp,
@@ -28,6 +31,8 @@ export function decide({
   modelDown = null,
   regime = null,
   macroTrend = null,
+  chop = null,
+  bbWidthPct = null,
   spreadUp = null,
   spreadDown = null,
   maxSpread = Number(process.env.RISK_MAX_SPREAD ?? 0.03)
@@ -37,6 +42,16 @@ export function decide({
   }
 
   const phase = remainingMinutes > 10 ? "EARLY" : remainingMinutes > 5 ? "MID" : "LATE";
+
+  // Choppiness Index gate — primary range filter
+  if (chop !== null && Number.isFinite(chop) && chop > CHOP_RANGE_THRESHOLD) {
+    return { action: "NO_TRADE", side: null, phase, reason: `chop_${chop.toFixed(1)}_above_${CHOP_RANGE_THRESHOLD}` };
+  }
+
+  // Bollinger Band Width gate — compressed market filter
+  if (bbWidthPct !== null && Number.isFinite(bbWidthPct) && bbWidthPct < BB_WIDTH_MIN_PCT) {
+    return { action: "NO_TRADE", side: null, phase, reason: `bb_width_${bbWidthPct.toFixed(2)}pct_below_${BB_WIDTH_MIN_PCT}` };
+  }
 
   if (regime === "CHOP" || regime === "RANGE") {
     return { action: "NO_TRADE", side: null, phase, reason: `regime_${regime.toLowerCase()}` };

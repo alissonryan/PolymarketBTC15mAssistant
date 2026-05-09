@@ -1,5 +1,6 @@
 import { fetchKlines, fetchLastPrice } from "./data/binance.js";
 import { computeMacroTrend } from "./engines/macroTrend.js";
+import { computeChop, computeBBWidth } from "./indicators/chop.js";
 import { startBinanceTradeStream } from "./data/binanceWs.js";
 import { fetchKalshiSnapshot, kalshiToBinanceSymbol } from "./data/kalshi.js";
 import { computeVwapSeries } from "./indicators/vwap.js";
@@ -185,6 +186,9 @@ async function main() {
         ? closes[closes.length - 1] < vwapNow && closes[closes.length - 2] > vwapSeries[vwapSeries.length - 2]
         : false;
 
+      const chop      = computeChop(klines1m, 60);
+      const bbWidthPct = computeBBWidth(closes, 20, 2);
+
       const regimeInfo = detectRegime({ price: lastPrice, vwap: vwapNow, vwapSlope, vwapCrossCount, volumeRecent, volumeAvg });
 
       // ── mercado Kalshi ───────────────────────────────────────────────────────
@@ -223,6 +227,8 @@ async function main() {
         modelUp: timeAware.adjustedUp, modelDown: timeAware.adjustedDown,
         regime: regimeInfo.regime,
         macroTrend: macroInfo.trend,
+        chop,
+        bbWidthPct,
         spreadUp: spreadYes,
         spreadDown: spreadNo
       });
@@ -266,8 +272,10 @@ async function main() {
       // ── display ──────────────────────────────────────────────────────────────
       const timeColor  = timeLeftMin0 > 10 ? ANSI.green : timeLeftMin0 > 5 ? ANSI.yellow : ANSI.red;
       const cvdColor   = cvdState.trend === "BUYING" ? ANSI.green : cvdState.trend === "SELLING" ? ANSI.red : ANSI.gray;
-      const macroColor = macroInfo.trend === "UP" ? ANSI.green : macroInfo.trend === "DOWN" ? ANSI.red : ANSI.gray;
+      const macroColor  = macroInfo.trend === "UP" ? ANSI.green : macroInfo.trend === "DOWN" ? ANSI.red : ANSI.gray;
       const macroEmaStr = macroInfo.ema50 !== null ? ` | EMA50=$${macroInfo.ema50.toFixed(0)}` : "";
+      const chopColor   = chop === null ? ANSI.gray : chop > 61.8 ? ANSI.red : chop > 50 ? ANSI.yellow : ANSI.green;
+      const bbColor     = bbWidthPct === null ? ANSI.gray : bbWidthPct < 1.0 ? ANSI.red : bbWidthPct < 2.0 ? ANSI.yellow : ANSI.green;
       const recColor  = rec.action === "ENTER" ? (rec.side === "UP" ? ANSI.green : ANSI.red) : ANSI.gray;
       const pnlColor  = (paperStats?.totalPnl ?? 0) >= 0 ? ANSI.green : ANSI.red;
 
@@ -289,6 +297,7 @@ async function main() {
         kv("Mkt NO:", `${ANSI.red}${marketNo?.toFixed(3) ?? "-"}${ANSI.reset}`),
         kv("Regime:", regimeInfo.regime),
         kv("Macro 1H:", `${macroColor}${macroInfo.trend}${ANSI.reset}${macroEmaStr}`),
+        kv("Range:", `CHOP ${chopColor}${chop !== null ? chop.toFixed(1) : "-"}${ANSI.reset} | BB ${bbColor}${bbWidthPct !== null ? bbWidthPct.toFixed(2) : "-"}%${ANSI.reset}`),
         kv("CVD:", `${cvdColor}${cvdState.trend}${ANSI.reset}${cvdDivergence ? ` | ${cvdDivergence.type === "BULLISH" ? ANSI.green + "div↑" : ANSI.red + "div↓"}${ANSI.reset}` : ""}`),
         tpField.inField ? kv("TPC:", `${tpField.direction === "UP" ? ANSI.green : ANSI.red}${tpField.direction} ${(tpField.probability * 100).toFixed(0)}% [${tpField.urgency}]${ANSI.reset}`) : null,
         lockOp.actionable ? kv("LOCK:", `${ANSI.yellow}BOTH | +${(lockOp.profit * 100).toFixed(1)}% garantido${ANSI.reset}`) : null,
