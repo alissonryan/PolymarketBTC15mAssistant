@@ -20,7 +20,8 @@ import { computeRsi, computeRsiSeries, sma, slopeLast } from "./indicators/rsi.j
 import { computeMacd } from "./indicators/macd.js";
 import { computeHeikenAshi, countConsecutive } from "./indicators/heikenAshi.js";
 import { detectRegime } from "./engines/regime.js";
-import { scoreDirection, applyTimeAwareness } from "./engines/probability.js";
+import { applyTimeAwareness } from "./engines/probability.js";
+import { lookupRate, isCalibrationLoaded } from "./engines/calibratedRate.js";
 import { computeEdge, decide } from "./engines/edge.js";
 import { appendCsvRow, formatNumber, formatPct, getCandleWindowTiming, sleep } from "./utils.js";
 import { startBinanceTradeStream } from "./data/binanceWs.js";
@@ -522,23 +523,22 @@ async function main() {
       const tpField = timePriceConv.evaluate(spotPrice, priceToBeat, timeLeftMin, CONFIG.candleWindowMinutes);
       const lockOp = lockStrategy.evaluate(marketUp, marketDown, regimeInfo.regime);
 
-      const scored = scoreDirection({
-        price: lastPrice,
-        vwap: vwapNow,
-        vwapSlope,
-        rsi: rsiNow,
-        rsiSlope,
-        macd,
-        heikenColor: consec.color,
-        heikenCount: consec.count,
-        failedVwapReclaim,
-        cvdTrend: cvdState.trend,
-        cvdDivergence,
-        cvdAbsorption,
-        tpField
-      });
+      // Calibrated base-rate model: replaces lagging TA score with historically-calibrated
+      // UP probability for the current market conditions (hour × macro × VWAP × RSI zone)
+      const utcHour = new Date().getUTCHours();
+      const priceVsVwap = (lastPrice !== null && vwapNow !== null)
+        ? (lastPrice >= vwapNow ? "ABOVE" : "BELOW")
+        : null;
+      const rsiZone = rsiNow === null ? null
+        : rsiNow > 60 ? "OVERBOUGHT"
+        : rsiNow < 40 ? "OVERSOLD"
+        : "NEUTRAL";
 
-      const timeAware = applyTimeAwareness(scored.rawUp, timeLeftMin, CONFIG.candleWindowMinutes);
+      const calibrated = (priceVsVwap !== null && rsiZone !== null && macroInfo.trend !== "NEUTRAL")
+        ? lookupRate({ hour: utcHour, macro: macroInfo.trend, priceVsVwap, rsiZone })
+        : { upRate: 0.5, downRate: 0.5, edge: 0, hasEdge: false, found: false, n: 0 };
+
+      const timeAware = applyTimeAwareness(calibrated.upRate, timeLeftMin, CONFIG.candleWindowMinutes);
 
       const edge = computeEdge({ modelUp: timeAware.adjustedUp, modelDown: timeAware.adjustedDown, marketYes: marketUp, marketNo: marketDown });
 
@@ -581,8 +581,17 @@ async function main() {
       const predictNarrative = (pLong !== null && pShort !== null && Number.isFinite(pLong) && Number.isFinite(pShort))
         ? (pLong > pShort ? "LONG" : pShort > pLong ? "SHORT" : "NEUTRAL")
         : "NEUTRAL";
+
+      // Calibration display
+      const calibEdgePct = calibrated.found ? ((calibrated.edge) * 100).toFixed(1) + "%" : "--";
+      const calibDir = calibrated.found ? (calibrated.upRate > 0.5 ? "UP" : "DOWN") : "--";
+      const calibStatus = calibrated.hasEdge
+        ? `${ANSI.green}✓ edge ${calibEdgePct} → ${calibDir}${ANSI.reset} (n=${calibrated.n})`
+        : calibrated.found
+          ? `~ sem edge sig. (n=${calibrated.n})`
+          : `${ANSI.red}sem dados${ANSI.reset}`;
       const predictValue = `${ANSI.green}LONG${ANSI.reset} ${ANSI.green}${formatProbPct(pLong, 0)}${ANSI.reset} / ${ANSI.red}SHORT${ANSI.reset} ${ANSI.red}${formatProbPct(pShort, 0)}${ANSI.reset}`;
-      const predictLine = `Score: ${predictValue}`;
+      const predictLine = `Calib: ${calibStatus}`;
 
       const marketUpStr = `${marketUp ?? "-"}${marketUp === null || marketUp === undefined ? "" : "¢"}`;
       const marketDownStr = `${marketDown ?? "-"}${marketDown === null || marketDown === undefined ? "" : "¢"}`;

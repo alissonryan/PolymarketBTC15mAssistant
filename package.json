@@ -7,6 +7,7 @@
     "start": "node --env-file=.env src/cli.js",
     "test": "node --test",
     "analyze:paper": "node scripts/analyze-paper.js",
+    "calibrate": "node scripts/calibrate.js",
     "polymarket:btc:5m": "CANDLE_WINDOW_MINUTES=5 EXECUTE_ORDERS=false PAPER_TRADING=true node --env-file=.env src/index.js",
     "polymarket:btc:15m": "CANDLE_WINDOW_MINUTES=15 EXECUTE_ORDERS=false PAPER_TRADING=true node --env-file=.env src/index.js",
     "kalshi:btc": "KALSHI_SERIES=${KALSHI_SERIES:-KXBTC15M} PAPER_LOG_PREFIX=${PAPER_LOG_PREFIX:-kalshi_btc_} node --env-file=.env src/index-kalshi.js",

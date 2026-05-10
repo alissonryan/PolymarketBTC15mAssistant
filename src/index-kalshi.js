@@ -9,7 +9,8 @@ import { computeMacd } from "./indicators/macd.js";
 import { computeHeikenAshi, countConsecutive } from "./indicators/heikenAshi.js";
 import { CVDAnalyzer } from "./indicators/cvd.js";
 import { detectRegime } from "./engines/regime.js";
-import { scoreDirection, applyTimeAwareness } from "./engines/probability.js";
+import { applyTimeAwareness } from "./engines/probability.js";
+import { lookupRate } from "./engines/calibratedRate.js";
 import { computeEdge, decide } from "./engines/edge.js";
 import { TimePriceConvergence } from "./engines/timePriceField.js";
 import { LockStrategy } from "./engines/lockStrategy.js";
@@ -205,16 +206,21 @@ async function main() {
       const tpField       = timePriceConv.evaluate(spotPrice ?? lastPrice, priceToBeat, timeLeftMin0, WINDOW_MIN);
       const lockOp        = lockStrategy.evaluate(marketYes, marketNo, regimeInfo.regime);
 
-      // ── scoring (YES = UP, NO = DOWN) ────────────────────────────────────────
-      const scored = scoreDirection({
-        price: lastPrice, vwap: vwapNow, vwapSlope,
-        rsi: rsiNow, rsiSlope, macd,
-        heikenColor: consec.color, heikenCount: consec.count,
-        failedVwapReclaim,
-        cvdTrend: cvdState.trend, cvdDivergence, cvdAbsorption, tpField
-      });
+      // ── scoring: calibrated historical base rates (replaces lagging TA signals) ──
+      const utcHour = new Date().getUTCHours();
+      const priceVsVwap = (lastPrice !== null && vwapNow !== null)
+        ? (lastPrice >= vwapNow ? "ABOVE" : "BELOW")
+        : null;
+      const rsiZone = rsiNow === null ? null
+        : rsiNow > 60 ? "OVERBOUGHT"
+        : rsiNow < 40 ? "OVERSOLD"
+        : "NEUTRAL";
 
-      const timeAware = applyTimeAwareness(scored.rawUp, timeLeftMin0, WINDOW_MIN);
+      const calibrated = (priceVsVwap !== null && rsiZone !== null && macroInfo.trend !== "NEUTRAL")
+        ? lookupRate({ hour: utcHour, macro: macroInfo.trend, priceVsVwap, rsiZone })
+        : { upRate: 0.5, downRate: 0.5, edge: 0, hasEdge: false, found: false, n: 0 };
+
+      const timeAware = applyTimeAwareness(calibrated.upRate, timeLeftMin0, WINDOW_MIN);
       const edge = computeEdge({
         modelUp: timeAware.adjustedUp, modelDown: timeAware.adjustedDown,
         marketYes, marketNo

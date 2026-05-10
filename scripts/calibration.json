@@ -1,0 +1,2882 @@
+[
+  {
+    "hour": 0,
+    "macro": "DOWN",
+    "priceVsVwap": "ABOVE",
+    "rsiZone": "NEUTRAL",
+    "n": 548,
+    "upRate": 0.498175,
+    "ci95": 0.041863,
+    "edge50": -0.001825
+  },
+  {
+    "hour": 0,
+    "macro": "DOWN",
+    "priceVsVwap": "ABOVE",
+    "rsiZone": "OVERBOUGHT",
+    "n": 375,
+    "upRate": 0.456,
+    "ci95": 0.050411,
+    "edge50": -0.044
+  },
+  {
+    "hour": 0,
+    "macro": "DOWN",
+    "priceVsVwap": "ABOVE",
+    "rsiZone": "OVERSOLD",
+    "n": 143,
+    "upRate": 0.426573,
+    "ci95": 0.081063,
+    "edge50": -0.073427
+  },
+  {
+    "hour": 0,
+    "macro": "DOWN",
+    "priceVsVwap": "BELOW",
+    "rsiZone": "NEUTRAL",
+    "n": 500,
+    "upRate": 0.464,
+    "ci95": 0.043713,
+    "edge50": -0.036
+  },
+  {
+    "hour": 0,
+    "macro": "DOWN",
+    "priceVsVwap": "BELOW",
+    "rsiZone": "OVERBOUGHT",
+    "n": 74,
+    "upRate": 0.513514,
+    "ci95": 0.113881,
+    "edge50": 0.013514
+  },
+  {
+    "hour": 0,
+    "macro": "DOWN",
+    "priceVsVwap": "BELOW",
+    "rsiZone": "OVERSOLD",
+    "n": 568,
+    "upRate": 0.508803,
+    "ci95": 0.041114,
+    "edge50": 0.008803
+  },
+  {
+    "hour": 0,
+    "macro": "UP",
+    "priceVsVwap": "ABOVE",
+    "rsiZone": "NEUTRAL",
+    "n": 433,
+    "upRate": 0.498845,
+    "ci95": 0.047096,
+    "edge50": -0.001155
+  },
+  {
+    "hour": 0,
+    "macro": "UP",
+    "priceVsVwap": "ABOVE",
+    "rsiZone": "OVERBOUGHT",
+    "n": 484,
+    "upRate": 0.487603,
+    "ci95": 0.044532,
+    "edge50": -0.012397
+  },
+  {
+    "hour": 0,
+    "macro": "UP",
+    "priceVsVwap": "ABOVE",
+    "rsiZone": "OVERSOLD",
+    "n": 120,
+    "upRate": 0.4,
+    "ci95": 0.087654,
+    "edge50": -0.1
+  },
+  {
+    "hour": 0,
+    "macro": "UP",
+    "priceVsVwap": "BELOW",
+    "rsiZone": "NEUTRAL",
+    "n": 488,
+    "upRate": 0.483607,
+    "ci95": 0.044339,
+    "edge50": -0.016393
+  },
+  {
+    "hour": 0,
+    "macro": "UP",
+    "priceVsVwap": "BELOW",
+    "rsiZone": "OVERBOUGHT",
+    "n": 140,
+    "upRate": 0.442857,
+    "ci95": 0.082282,
+    "edge50": -0.057143
+  },
+  {
+    "hour": 0,
+    "macro": "UP",
+    "priceVsVwap": "BELOW",
+    "rsiZone": "OVERSOLD",
+    "n": 483,
+    "upRate": 0.521739,
+    "ci95": 0.044549,
+    "edge50": 0.021739
+  },
+  {
+    "hour": 1,
+    "macro": "DOWN",
+    "priceVsVwap": "ABOVE",
+    "rsiZone": "NEUTRAL",
+    "n": 526,
+    "upRate": 0.488593,
+    "ci95": 0.042719,
+    "edge50": -0.011407
+  },
+  {
+    "hour": 1,
+    "macro": "DOWN",
+    "priceVsVwap": "ABOVE",
+    "rsiZone": "OVERBOUGHT",
+    "n": 546,
+    "upRate": 0.443223,
+    "ci95": 0.041669,
+    "edge50": -0.056777
+  },
+  {
+    "hour": 1,
+    "macro": "DOWN",
+    "priceVsVwap": "ABOVE",
+    "rsiZone": "OVERSOLD",
+    "n": 31,
+    "upRate": 0.483871,
+    "ci95": 0.175922,
+    "edge50": -0.016129
+  },
+  {
+    "hour": 1,
+    "macro": "DOWN",
+    "priceVsVwap": "BELOW",
+    "rsiZone": "NEUTRAL",
+    "n": 456,
+    "upRate": 0.517544,
+    "ci95": 0.045864,
+    "edge50": 0.017544
+  },
+  {
+    "hour": 1,
+    "macro": "DOWN",
+    "priceVsVwap": "BELOW",
+    "rsiZone": "OVERBOUGHT",
+    "n": 20,
+    "upRate": 0.35,
+    "ci95": 0.209041,
+    "edge50": -0.15
+  },
+  {
+    "hour": 1,
+    "macro": "DOWN",
+    "priceVsVwap": "BELOW",
+    "rsiZone": "OVERSOLD",
+    "n": 665,
+    "upRate": 0.457143,
+    "ci95": 0.037863,
+    "edge50": -0.042857
+  },
+  {
+    "hour": 1,
+    "macro": "UP",
+    "priceVsVwap": "ABOVE",
+    "rsiZone": "NEUTRAL",
+    "n": 566,
+    "upRate": 0.533569,
+    "ci95": 0.0411,
+    "edge50": 0.033569
+  },
+  {
+    "hour": 1,
+    "macro": "UP",
+    "priceVsVwap": "ABOVE",
+    "rsiZone": "OVERBOUGHT",
+    "n": 597,
+    "upRate": 0.457286,
+    "ci95": 0.039962,
+    "edge50": -0.042714
+  },
+  {
+    "hour": 1,
+    "macro": "UP",
+    "priceVsVwap": "ABOVE",
+    "rsiZone": "OVERSOLD",
+    "n": 15,
+    "upRate": 0.333333,
+    "ci95": 0.238564,
+    "edge50": -0.166667
+  },
+  {
+    "hour": 1,
+    "macro": "UP",
+    "priceVsVwap": "BELOW",
+    "rsiZone": "NEUTRAL",
+    "n": 506,
+    "upRate": 0.521739,
+    "ci95": 0.043525,
+    "edge50": 0.021739
+  },
+  {
+    "hour": 1,
+    "macro": "UP",
+    "priceVsVwap": "BELOW",
+    "rsiZone": "OVERBOUGHT",
+    "n": 33,
+    "upRate": 0.69697,
+    "ci95": 0.156801,
+    "edge50": 0.19697
+  },
+  {
+    "hour": 1,
+    "macro": "UP",
+    "priceVsVwap": "BELOW",
+    "rsiZone": "OVERSOLD",
+    "n": 395,
+    "upRate": 0.534177,
+    "ci95": 0.049194,
+    "edge50": 0.034177
+  },
+  {
+    "hour": 2,
+    "macro": "DOWN",
+    "priceVsVwap": "ABOVE",
+    "rsiZone": "NEUTRAL",
+    "n": 539,
+    "upRate": 0.465677,
+    "ci95": 0.042112,
+    "edge50": -0.034323
+  },
+  {
+    "hour": 2,
+    "macro": "DOWN",
+    "priceVsVwap": "ABOVE",
+    "rsiZone": "OVERBOUGHT",
+    "n": 503,
+    "upRate": 0.508946,
+    "ci95": 0.043689,
+    "edge50": 0.008946
+  },
+  {
+    "hour": 2,
+    "macro": "DOWN",
+    "priceVsVwap": "ABOVE",
+    "rsiZone": "OVERSOLD",
+    "n": 31,
+    "upRate": 0.451613,
+    "ci95": 0.175187,
+    "edge50": -0.048387
+  },
+  {
+    "hour": 2,
+    "macro": "DOWN",
+    "priceVsVwap": "BELOW",
+    "rsiZone": "NEUTRAL",
+    "n": 510,
+    "upRate": 0.509804,
+    "ci95": 0.043387,
+    "edge50": 0.009804
+  },
+  {
+    "hour": 2,
+    "macro": "DOWN",
+    "priceVsVwap": "BELOW",
+    "rsiZone": "OVERBOUGHT",
+    "n": 18,
+    "upRate": 0.611111,
+    "ci95": 0.225213,
+    "edge50": 0.111111
+  },
+  {
+    "hour": 2,
+    "macro": "DOWN",
+    "priceVsVwap": "BELOW",
+    "rsiZone": "OVERSOLD",
+    "n": 631,
+    "upRate": 0.524564,
+    "ci95": 0.038966,
+    "edge50": 0.024564
+  },
+  {
+    "hour": 2,
+    "macro": "UP",
+    "priceVsVwap": "ABOVE",
+    "rsiZone": "NEUTRAL",
+    "n": 480,
+    "upRate": 0.495833,
+    "ci95": 0.044729,
+    "edge50": -0.004167
+  },
+  {
+    "hour": 2,
+    "macro": "UP",
+    "priceVsVwap": "ABOVE",
+    "rsiZone": "OVERBOUGHT",
+    "n": 668,
+    "upRate": 0.5,
+    "ci95": 0.037917,
+    "edge50": 0
+  },
+  {
+    "hour": 2,
+    "macro": "UP",
+    "priceVsVwap": "ABOVE",
+    "rsiZone": "OVERSOLD",
+    "n": 34,
+    "upRate": 0.558824,
+    "ci95": 0.166901,
+    "edge50": 0.058824
+  },
+  {
+    "hour": 2,
+    "macro": "UP",
+    "priceVsVwap": "BELOW",
+    "rsiZone": "NEUTRAL",
+    "n": 433,
+    "upRate": 0.517321,
+    "ci95": 0.047068,
+    "edge50": 0.017321
+  },
+  {
+    "hour": 2,
+    "macro": "UP",
+    "priceVsVwap": "BELOW",
+    "rsiZone": "OVERBOUGHT",
+    "n": 7,
+    "upRate": 0.571429,
+    "ci95": 0.366606,
+    "edge50": 0.071429
+  },
+  {
+    "hour": 2,
+    "macro": "UP",
+    "priceVsVwap": "BELOW",
+    "rsiZone": "OVERSOLD",
+    "n": 502,
+    "upRate": 0.507968,
+    "ci95": 0.043734,
+    "edge50": 0.007968
+  },
+  {
+    "hour": 3,
+    "macro": "DOWN",
+    "priceVsVwap": "ABOVE",
+    "rsiZone": "NEUTRAL",
+    "n": 470,
+    "upRate": 0.478723,
+    "ci95": 0.045163,
+    "edge50": -0.021277
+  },
+  {
+    "hour": 3,
+    "macro": "DOWN",
+    "priceVsVwap": "ABOVE",
+    "rsiZone": "OVERBOUGHT",
+    "n": 536,
+    "upRate": 0.475746,
+    "ci95": 0.04228,
+    "edge50": -0.024254
+  },
+  {
+    "hour": 3,
+    "macro": "DOWN",
+    "priceVsVwap": "ABOVE",
+    "rsiZone": "OVERSOLD",
+    "n": 52,
+    "upRate": 0.384615,
+    "ci95": 0.132233,
+    "edge50": -0.115385
+  },
+  {
+    "hour": 3,
+    "macro": "DOWN",
+    "priceVsVwap": "BELOW",
+    "rsiZone": "NEUTRAL",
+    "n": 485,
+    "upRate": 0.463918,
+    "ci95": 0.044383,
+    "edge50": -0.036082
+  },
+  {
+    "hour": 3,
+    "macro": "DOWN",
+    "priceVsVwap": "BELOW",
+    "rsiZone": "OVERBOUGHT",
+    "n": 51,
+    "upRate": 0.45098,
+    "ci95": 0.136566,
+    "edge50": -0.04902
+  },
+  {
+    "hour": 3,
+    "macro": "DOWN",
+    "priceVsVwap": "BELOW",
+    "rsiZone": "OVERSOLD",
+    "n": 662,
+    "upRate": 0.515106,
+    "ci95": 0.038071,
+    "edge50": 0.015106
+  },
+  {
+    "hour": 3,
+    "macro": "UP",
+    "priceVsVwap": "ABOVE",
+    "rsiZone": "NEUTRAL",
+    "n": 560,
+    "upRate": 0.503571,
+    "ci95": 0.041412,
+    "edge50": 0.003571
+  },
+  {
+    "hour": 3,
+    "macro": "UP",
+    "priceVsVwap": "ABOVE",
+    "rsiZone": "OVERBOUGHT",
+    "n": 620,
+    "upRate": 0.482258,
+    "ci95": 0.039333,
+    "edge50": -0.017742
+  },
+  {
+    "hour": 3,
+    "macro": "UP",
+    "priceVsVwap": "ABOVE",
+    "rsiZone": "OVERSOLD",
+    "n": 50,
+    "upRate": 0.4,
+    "ci95": 0.135793,
+    "edge50": -0.1
+  },
+  {
+    "hour": 3,
+    "macro": "UP",
+    "priceVsVwap": "BELOW",
+    "rsiZone": "NEUTRAL",
+    "n": 385,
+    "upRate": 0.537662,
+    "ci95": 0.049804,
+    "edge50": 0.037662
+  },
+  {
+    "hour": 3,
+    "macro": "UP",
+    "priceVsVwap": "BELOW",
+    "rsiZone": "OVERBOUGHT",
+    "n": 49,
+    "upRate": 0.530612,
+    "ci95": 0.139737,
+    "edge50": 0.030612
+  },
+  {
+    "hour": 3,
+    "macro": "UP",
+    "priceVsVwap": "BELOW",
+    "rsiZone": "OVERSOLD",
+    "n": 436,
+    "upRate": 0.529817,
+    "ci95": 0.04685,
+    "edge50": 0.029817
+  },
+  {
+    "hour": 4,
+    "macro": "DOWN",
+    "priceVsVwap": "ABOVE",
+    "rsiZone": "NEUTRAL",
+    "n": 439,
+    "upRate": 0.473804,
+    "ci95": 0.046709,
+    "edge50": -0.026196
+  },
+  {
+    "hour": 4,
+    "macro": "DOWN",
+    "priceVsVwap": "ABOVE",
+    "rsiZone": "OVERBOUGHT",
+    "n": 429,
+    "upRate": 0.445221,
+    "ci95": 0.04703,
+    "edge50": -0.054779
+  },
+  {
+    "hour": 4,
+    "macro": "DOWN",
+    "priceVsVwap": "ABOVE",
+    "rsiZone": "OVERSOLD",
+    "n": 99,
+    "upRate": 0.494949,
+    "ci95": 0.098489,
+    "edge50": -0.005051
+  },
+  {
+    "hour": 4,
+    "macro": "DOWN",
+    "priceVsVwap": "BELOW",
+    "rsiZone": "NEUTRAL",
+    "n": 508,
+    "upRate": 0.48622,
+    "ci95": 0.043464,
+    "edge50": -0.01378
+  },
+  {
+    "hour": 4,
+    "macro": "DOWN",
+    "priceVsVwap": "BELOW",
+    "rsiZone": "OVERBOUGHT",
+    "n": 97,
+    "upRate": 0.494845,
+    "ci95": 0.099499,
+    "edge50": -0.005155
+  },
+  {
+    "hour": 4,
+    "macro": "DOWN",
+    "priceVsVwap": "BELOW",
+    "rsiZone": "OVERSOLD",
+    "n": 612,
+    "upRate": 0.477124,
+    "ci95": 0.039573,
+    "edge50": -0.022876
+  },
+  {
+    "hour": 4,
+    "macro": "UP",
+    "priceVsVwap": "ABOVE",
+    "rsiZone": "NEUTRAL",
+    "n": 575,
+    "upRate": 0.493913,
+    "ci95": 0.040866,
+    "edge50": -0.006087
+  },
+  {
+    "hour": 4,
+    "macro": "UP",
+    "priceVsVwap": "ABOVE",
+    "rsiZone": "OVERBOUGHT",
+    "n": 620,
+    "upRate": 0.498387,
+    "ci95": 0.039358,
+    "edge50": -0.001613
+  },
+  {
+    "hour": 4,
+    "macro": "UP",
+    "priceVsVwap": "ABOVE",
+    "rsiZone": "OVERSOLD",
+    "n": 101,
+    "upRate": 0.544554,
+    "ci95": 0.097126,
+    "edge50": 0.044554
+  },
+  {
+    "hour": 4,
+    "macro": "UP",
+    "priceVsVwap": "BELOW",
+    "rsiZone": "NEUTRAL",
+    "n": 383,
+    "upRate": 0.527415,
+    "ci95": 0.05,
+    "edge50": 0.027415
+  },
+  {
+    "hour": 4,
+    "macro": "UP",
+    "priceVsVwap": "BELOW",
+    "rsiZone": "OVERBOUGHT",
+    "n": 94,
+    "upRate": 0.553191,
+    "ci95": 0.100506,
+    "edge50": 0.053191
+  },
+  {
+    "hour": 4,
+    "macro": "UP",
+    "priceVsVwap": "BELOW",
+    "rsiZone": "OVERSOLD",
+    "n": 399,
+    "upRate": 0.496241,
+    "ci95": 0.04906,
+    "edge50": -0.003759
+  },
+  {
+    "hour": 5,
+    "macro": "DOWN",
+    "priceVsVwap": "ABOVE",
+    "rsiZone": "NEUTRAL",
+    "n": 426,
+    "upRate": 0.460094,
+    "ci95": 0.04733,
+    "edge50": -0.039906
+  },
+  {
+    "hour": 5,
+    "macro": "DOWN",
+    "priceVsVwap": "ABOVE",
+    "rsiZone": "OVERBOUGHT",
+    "n": 376,
+    "upRate": 0.50266,
+    "ci95": 0.050539,
+    "edge50": 0.00266
+  },
+  {
+    "hour": 5,
+    "macro": "DOWN",
+    "priceVsVwap": "ABOVE",
+    "rsiZone": "OVERSOLD",
+    "n": 117,
+    "upRate": 0.444444,
+    "ci95": 0.09004,
+    "edge50": -0.055556
+  },
+  {
+    "hour": 5,
+    "macro": "DOWN",
+    "priceVsVwap": "BELOW",
+    "rsiZone": "NEUTRAL",
+    "n": 548,
+    "upRate": 0.487226,
+    "ci95": 0.04185,
+    "edge50": -0.012774
+  },
+  {
+    "hour": 5,
+    "macro": "DOWN",
+    "priceVsVwap": "BELOW",
+    "rsiZone": "OVERBOUGHT",
+    "n": 116,
+    "upRate": 0.405172,
+    "ci95": 0.089339,
+    "edge50": -0.094828
+  },
+  {
+    "hour": 5,
+    "macro": "DOWN",
+    "priceVsVwap": "BELOW",
+    "rsiZone": "OVERSOLD",
+    "n": 649,
+    "upRate": 0.53775,
+    "ci95": 0.038359,
+    "edge50": 0.03775
+  },
+  {
+    "hour": 5,
+    "macro": "UP",
+    "priceVsVwap": "ABOVE",
+    "rsiZone": "NEUTRAL",
+    "n": 542,
+    "upRate": 0.512915,
+    "ci95": 0.042081,
+    "edge50": 0.012915
+  },
+  {
+    "hour": 5,
+    "macro": "UP",
+    "priceVsVwap": "ABOVE",
+    "rsiZone": "OVERBOUGHT",
+    "n": 620,
+    "upRate": 0.487097,
+    "ci95": 0.039345,
+    "edge50": -0.012903
+  },
+  {
+    "hour": 5,
+    "macro": "UP",
+    "priceVsVwap": "ABOVE",
+    "rsiZone": "OVERSOLD",
+    "n": 134,
+    "upRate": 0.507463,
+    "ci95": 0.08465,
+    "edge50": 0.007463
+  },
+  {
+    "hour": 5,
+    "macro": "UP",
+    "priceVsVwap": "BELOW",
+    "rsiZone": "NEUTRAL",
+    "n": 342,
+    "upRate": 0.51462,
+    "ci95": 0.05297,
+    "edge50": 0.01462
+  },
+  {
+    "hour": 5,
+    "macro": "UP",
+    "priceVsVwap": "BELOW",
+    "rsiZone": "OVERBOUGHT",
+    "n": 106,
+    "upRate": 0.566038,
+    "ci95": 0.094352,
+    "edge50": 0.066038
+  },
+  {
+    "hour": 5,
+    "macro": "UP",
+    "priceVsVwap": "BELOW",
+    "rsiZone": "OVERSOLD",
+    "n": 380,
+    "upRate": 0.518421,
+    "ci95": 0.050239,
+    "edge50": 0.018421
+  },
+  {
+    "hour": 6,
+    "macro": "DOWN",
+    "priceVsVwap": "ABOVE",
+    "rsiZone": "NEUTRAL",
+    "n": 398,
+    "upRate": 0.492462,
+    "ci95": 0.049117,
+    "edge50": -0.007538
+  },
+  {
+    "hour": 6,
+    "macro": "DOWN",
+    "priceVsVwap": "ABOVE",
+    "rsiZone": "OVERBOUGHT",
+    "n": 363,
+    "upRate": 0.424242,
+    "ci95": 0.050843,
+    "edge50": -0.075758
+  },
+  {
+    "hour": 6,
+    "macro": "DOWN",
+    "priceVsVwap": "ABOVE",
+    "rsiZone": "OVERSOLD",
+    "n": 133,
+    "upRate": 0.413534,
+    "ci95": 0.083696,
+    "edge50": -0.086466
+  },
+  {
+    "hour": 6,
+    "macro": "DOWN",
+    "priceVsVwap": "BELOW",
+    "rsiZone": "NEUTRAL",
+    "n": 521,
+    "upRate": 0.483685,
+    "ci95": 0.042912,
+    "edge50": -0.016315
+  },
+  {
+    "hour": 6,
+    "macro": "DOWN",
+    "priceVsVwap": "BELOW",
+    "rsiZone": "OVERBOUGHT",
+    "n": 116,
+    "upRate": 0.482759,
+    "ci95": 0.090937,
+    "edge50": -0.017241
+  },
+  {
+    "hour": 6,
+    "macro": "DOWN",
+    "priceVsVwap": "BELOW",
+    "rsiZone": "OVERSOLD",
+    "n": 677,
+    "upRate": 0.471196,
+    "ci95": 0.037602,
+    "edge50": -0.028804
+  },
+  {
+    "hour": 6,
+    "macro": "UP",
+    "priceVsVwap": "ABOVE",
+    "rsiZone": "NEUTRAL",
+    "n": 561,
+    "upRate": 0.513369,
+    "ci95": 0.041361,
+    "edge50": 0.013369
+  },
+  {
+    "hour": 6,
+    "macro": "UP",
+    "priceVsVwap": "ABOVE",
+    "rsiZone": "OVERBOUGHT",
+    "n": 629,
+    "upRate": 0.515103,
+    "ci95": 0.039057,
+    "edge50": 0.015103
+  },
+  {
+    "hour": 6,
+    "macro": "UP",
+    "priceVsVwap": "ABOVE",
+    "rsiZone": "OVERSOLD",
+    "n": 154,
+    "upRate": 0.467532,
+    "ci95": 0.078804,
+    "edge50": -0.032468
+  },
+  {
+    "hour": 6,
+    "macro": "UP",
+    "priceVsVwap": "BELOW",
+    "rsiZone": "NEUTRAL",
+    "n": 389,
+    "upRate": 0.498715,
+    "ci95": 0.049688,
+    "edge50": -0.001285
+  },
+  {
+    "hour": 6,
+    "macro": "UP",
+    "priceVsVwap": "BELOW",
+    "rsiZone": "OVERBOUGHT",
+    "n": 71,
+    "upRate": 0.661972,
+    "ci95": 0.110033,
+    "edge50": 0.161972
+  },
+  {
+    "hour": 6,
+    "macro": "UP",
+    "priceVsVwap": "BELOW",
+    "rsiZone": "OVERSOLD",
+    "n": 344,
+    "upRate": 0.59593,
+    "ci95": 0.051856,
+    "edge50": 0.09593
+  },
+  {
+    "hour": 7,
+    "macro": "DOWN",
+    "priceVsVwap": "ABOVE",
+    "rsiZone": "NEUTRAL",
+    "n": 354,
+    "upRate": 0.485876,
+    "ci95": 0.052066,
+    "edge50": -0.014124
+  },
+  {
+    "hour": 7,
+    "macro": "DOWN",
+    "priceVsVwap": "ABOVE",
+    "rsiZone": "OVERBOUGHT",
+    "n": 342,
+    "upRate": 0.482456,
+    "ci95": 0.05296,
+    "edge50": -0.017544
+  },
+  {
+    "hour": 7,
+    "macro": "DOWN",
+    "priceVsVwap": "ABOVE",
+    "rsiZone": "OVERSOLD",
+    "n": 88,
+    "upRate": 0.5,
+    "ci95": 0.104468,
+    "edge50": 0
+  },
+  {
+    "hour": 7,
+    "macro": "DOWN",
+    "priceVsVwap": "BELOW",
+    "rsiZone": "NEUTRAL",
+    "n": 602,
+    "upRate": 0.496678,
+    "ci95": 0.039941,
+    "edge50": -0.003322
+  },
+  {
+    "hour": 7,
+    "macro": "DOWN",
+    "priceVsVwap": "BELOW",
+    "rsiZone": "OVERBOUGHT",
+    "n": 140,
+    "upRate": 0.442857,
+    "ci95": 0.082282,
+    "edge50": -0.057143
+  },
+  {
+    "hour": 7,
+    "macro": "DOWN",
+    "priceVsVwap": "BELOW",
+    "rsiZone": "OVERSOLD",
+    "n": 562,
+    "upRate": 0.512456,
+    "ci95": 0.041326,
+    "edge50": 0.012456
+  },
+  {
+    "hour": 7,
+    "macro": "UP",
+    "priceVsVwap": "ABOVE",
+    "rsiZone": "NEUTRAL",
+    "n": 625,
+    "upRate": 0.5056,
+    "ci95": 0.039198,
+    "edge50": 0.0056
+  },
+  {
+    "hour": 7,
+    "macro": "UP",
+    "priceVsVwap": "ABOVE",
+    "rsiZone": "OVERBOUGHT",
+    "n": 679,
+    "upRate": 0.512518,
+    "ci95": 0.037597,
+    "edge50": 0.012518
+  },
+  {
+    "hour": 7,
+    "macro": "UP",
+    "priceVsVwap": "ABOVE",
+    "rsiZone": "OVERSOLD",
+    "n": 165,
+    "upRate": 0.472727,
+    "ci95": 0.076179,
+    "edge50": -0.027273
+  },
+  {
+    "hour": 7,
+    "macro": "UP",
+    "priceVsVwap": "BELOW",
+    "rsiZone": "NEUTRAL",
+    "n": 330,
+    "upRate": 0.533333,
+    "ci95": 0.053827,
+    "edge50": 0.033333
+  },
+  {
+    "hour": 7,
+    "macro": "UP",
+    "priceVsVwap": "BELOW",
+    "rsiZone": "OVERBOUGHT",
+    "n": 124,
+    "upRate": 0.379032,
+    "ci95": 0.085392,
+    "edge50": -0.120968
+  },
+  {
+    "hour": 7,
+    "macro": "UP",
+    "priceVsVwap": "BELOW",
+    "rsiZone": "OVERSOLD",
+    "n": 345,
+    "upRate": 0.521739,
+    "ci95": 0.052712,
+    "edge50": 0.021739
+  },
+  {
+    "hour": 8,
+    "macro": "DOWN",
+    "priceVsVwap": "ABOVE",
+    "rsiZone": "NEUTRAL",
+    "n": 368,
+    "upRate": 0.451087,
+    "ci95": 0.050841,
+    "edge50": -0.048913
+  },
+  {
+    "hour": 8,
+    "macro": "DOWN",
+    "priceVsVwap": "ABOVE",
+    "rsiZone": "OVERBOUGHT",
+    "n": 327,
+    "upRate": 0.428135,
+    "ci95": 0.053631,
+    "edge50": -0.071865
+  },
+  {
+    "hour": 8,
+    "macro": "DOWN",
+    "priceVsVwap": "ABOVE",
+    "rsiZone": "OVERSOLD",
+    "n": 84,
+    "upRate": 0.464286,
+    "ci95": 0.106654,
+    "edge50": -0.035714
+  },
+  {
+    "hour": 8,
+    "macro": "DOWN",
+    "priceVsVwap": "BELOW",
+    "rsiZone": "NEUTRAL",
+    "n": 636,
+    "upRate": 0.487421,
+    "ci95": 0.038847,
+    "edge50": -0.012579
+  },
+  {
+    "hour": 8,
+    "macro": "DOWN",
+    "priceVsVwap": "BELOW",
+    "rsiZone": "OVERBOUGHT",
+    "n": 166,
+    "upRate": 0.481928,
+    "ci95": 0.076013,
+    "edge50": -0.018072
+  },
+  {
+    "hour": 8,
+    "macro": "DOWN",
+    "priceVsVwap": "BELOW",
+    "rsiZone": "OVERSOLD",
+    "n": 543,
+    "upRate": 0.493554,
+    "ci95": 0.042052,
+    "edge50": -0.006446
+  },
+  {
+    "hour": 8,
+    "macro": "UP",
+    "priceVsVwap": "ABOVE",
+    "rsiZone": "NEUTRAL",
+    "n": 609,
+    "upRate": 0.505747,
+    "ci95": 0.039709,
+    "edge50": 0.005747
+  },
+  {
+    "hour": 8,
+    "macro": "UP",
+    "priceVsVwap": "ABOVE",
+    "rsiZone": "OVERBOUGHT",
+    "n": 750,
+    "upRate": 0.485333,
+    "ci95": 0.035769,
+    "edge50": -0.014667
+  },
+  {
+    "hour": 8,
+    "macro": "UP",
+    "priceVsVwap": "ABOVE",
+    "rsiZone": "OVERSOLD",
+    "n": 170,
+    "upRate": 0.523529,
+    "ci95": 0.075079,
+    "edge50": 0.023529
+  },
+  {
+    "hour": 8,
+    "macro": "UP",
+    "priceVsVwap": "BELOW",
+    "rsiZone": "NEUTRAL",
+    "n": 303,
+    "upRate": 0.521452,
+    "ci95": 0.056248,
+    "edge50": 0.021452
+  },
+  {
+    "hour": 8,
+    "macro": "UP",
+    "priceVsVwap": "BELOW",
+    "rsiZone": "OVERBOUGHT",
+    "n": 82,
+    "upRate": 0.512195,
+    "ci95": 0.108191,
+    "edge50": 0.012195
+  },
+  {
+    "hour": 8,
+    "macro": "UP",
+    "priceVsVwap": "BELOW",
+    "rsiZone": "OVERSOLD",
+    "n": 318,
+    "upRate": 0.534591,
+    "ci95": 0.054824,
+    "edge50": 0.034591
+  },
+  {
+    "hour": 9,
+    "macro": "DOWN",
+    "priceVsVwap": "ABOVE",
+    "rsiZone": "NEUTRAL",
+    "n": 305,
+    "upRate": 0.465574,
+    "ci95": 0.055981,
+    "edge50": -0.034426
+  },
+  {
+    "hour": 9,
+    "macro": "DOWN",
+    "priceVsVwap": "ABOVE",
+    "rsiZone": "OVERBOUGHT",
+    "n": 315,
+    "upRate": 0.453968,
+    "ci95": 0.054982,
+    "edge50": -0.046032
+  },
+  {
+    "hour": 9,
+    "macro": "DOWN",
+    "priceVsVwap": "ABOVE",
+    "rsiZone": "OVERSOLD",
+    "n": 139,
+    "upRate": 0.453237,
+    "ci95": 0.082758,
+    "edge50": -0.046763
+  },
+  {
+    "hour": 9,
+    "macro": "DOWN",
+    "priceVsVwap": "BELOW",
+    "rsiZone": "NEUTRAL",
+    "n": 601,
+    "upRate": 0.480865,
+    "ci95": 0.039946,
+    "edge50": -0.019135
+  },
+  {
+    "hour": 9,
+    "macro": "DOWN",
+    "priceVsVwap": "BELOW",
+    "rsiZone": "OVERBOUGHT",
+    "n": 147,
+    "upRate": 0.414966,
+    "ci95": 0.079652,
+    "edge50": -0.085034
+  },
+  {
+    "hour": 9,
+    "macro": "DOWN",
+    "priceVsVwap": "BELOW",
+    "rsiZone": "OVERSOLD",
+    "n": 701,
+    "upRate": 0.496434,
+    "ci95": 0.037013,
+    "edge50": -0.003566
+  },
+  {
+    "hour": 9,
+    "macro": "UP",
+    "priceVsVwap": "ABOVE",
+    "rsiZone": "NEUTRAL",
+    "n": 585,
+    "upRate": 0.517949,
+    "ci95": 0.040492,
+    "edge50": 0.017949
+  },
+  {
+    "hour": 9,
+    "macro": "UP",
+    "priceVsVwap": "ABOVE",
+    "rsiZone": "OVERBOUGHT",
+    "n": 750,
+    "upRate": 0.489333,
+    "ci95": 0.035776,
+    "edge50": -0.010667
+  },
+  {
+    "hour": 9,
+    "macro": "UP",
+    "priceVsVwap": "ABOVE",
+    "rsiZone": "OVERSOLD",
+    "n": 223,
+    "upRate": 0.529148,
+    "ci95": 0.065514,
+    "edge50": 0.029148
+  },
+  {
+    "hour": 9,
+    "macro": "UP",
+    "priceVsVwap": "BELOW",
+    "rsiZone": "NEUTRAL",
+    "n": 233,
+    "upRate": 0.502146,
+    "ci95": 0.064201,
+    "edge50": 0.002146
+  },
+  {
+    "hour": 9,
+    "macro": "UP",
+    "priceVsVwap": "BELOW",
+    "rsiZone": "OVERBOUGHT",
+    "n": 103,
+    "upRate": 0.553398,
+    "ci95": 0.09601,
+    "edge50": 0.053398
+  },
+  {
+    "hour": 9,
+    "macro": "UP",
+    "priceVsVwap": "BELOW",
+    "rsiZone": "OVERSOLD",
+    "n": 254,
+    "upRate": 0.551181,
+    "ci95": 0.061168,
+    "edge50": 0.051181
+  },
+  {
+    "hour": 10,
+    "macro": "DOWN",
+    "priceVsVwap": "ABOVE",
+    "rsiZone": "NEUTRAL",
+    "n": 390,
+    "upRate": 0.482051,
+    "ci95": 0.049592,
+    "edge50": -0.017949
+  },
+  {
+    "hour": 10,
+    "macro": "DOWN",
+    "priceVsVwap": "ABOVE",
+    "rsiZone": "OVERBOUGHT",
+    "n": 269,
+    "upRate": 0.460967,
+    "ci95": 0.059569,
+    "edge50": -0.039033
+  },
+  {
+    "hour": 10,
+    "macro": "DOWN",
+    "priceVsVwap": "ABOVE",
+    "rsiZone": "OVERSOLD",
+    "n": 95,
+    "upRate": 0.473684,
+    "ci95": 0.100407,
+    "edge50": -0.026316
+  },
+  {
+    "hour": 10,
+    "macro": "DOWN",
+    "priceVsVwap": "BELOW",
+    "rsiZone": "NEUTRAL",
+    "n": 660,
+    "upRate": 0.518182,
+    "ci95": 0.038121,
+    "edge50": 0.018182
+  },
+  {
+    "hour": 10,
+    "macro": "DOWN",
+    "priceVsVwap": "BELOW",
+    "rsiZone": "OVERBOUGHT",
+    "n": 183,
+    "upRate": 0.540984,
+    "ci95": 0.0722,
+    "edge50": 0.040984
+  },
+  {
+    "hour": 10,
+    "macro": "DOWN",
+    "priceVsVwap": "BELOW",
+    "rsiZone": "OVERSOLD",
+    "n": 659,
+    "upRate": 0.512898,
+    "ci95": 0.038163,
+    "edge50": 0.012898
+  },
+  {
+    "hour": 10,
+    "macro": "UP",
+    "priceVsVwap": "ABOVE",
+    "rsiZone": "NEUTRAL",
+    "n": 691,
+    "upRate": 0.490593,
+    "ci95": 0.037274,
+    "edge50": -0.009407
+  },
+  {
+    "hour": 10,
+    "macro": "UP",
+    "priceVsVwap": "ABOVE",
+    "rsiZone": "OVERBOUGHT",
+    "n": 622,
+    "upRate": 0.501608,
+    "ci95": 0.039294,
+    "edge50": 0.001608
+  },
+  {
+    "hour": 10,
+    "macro": "UP",
+    "priceVsVwap": "ABOVE",
+    "rsiZone": "OVERSOLD",
+    "n": 180,
+    "upRate": 0.511111,
+    "ci95": 0.073027,
+    "edge50": 0.011111
+  },
+  {
+    "hour": 10,
+    "macro": "UP",
+    "priceVsVwap": "BELOW",
+    "rsiZone": "NEUTRAL",
+    "n": 283,
+    "upRate": 0.540636,
+    "ci95": 0.058062,
+    "edge50": 0.040636
+  },
+  {
+    "hour": 10,
+    "macro": "UP",
+    "priceVsVwap": "BELOW",
+    "rsiZone": "OVERBOUGHT",
+    "n": 92,
+    "upRate": 0.521739,
+    "ci95": 0.102075,
+    "edge50": 0.021739
+  },
+  {
+    "hour": 10,
+    "macro": "UP",
+    "priceVsVwap": "BELOW",
+    "rsiZone": "OVERSOLD",
+    "n": 232,
+    "upRate": 0.530172,
+    "ci95": 0.064223,
+    "edge50": 0.030172
+  },
+  {
+    "hour": 11,
+    "macro": "DOWN",
+    "priceVsVwap": "ABOVE",
+    "rsiZone": "NEUTRAL",
+    "n": 381,
+    "upRate": 0.503937,
+    "ci95": 0.050205,
+    "edge50": 0.003937
+  },
+  {
+    "hour": 11,
+    "macro": "DOWN",
+    "priceVsVwap": "ABOVE",
+    "rsiZone": "OVERBOUGHT",
+    "n": 268,
+    "upRate": 0.451493,
+    "ci95": 0.059581,
+    "edge50": -0.048507
+  },
+  {
+    "hour": 11,
+    "macro": "DOWN",
+    "priceVsVwap": "ABOVE",
+    "rsiZone": "OVERSOLD",
+    "n": 73,
+    "upRate": 0.479452,
+    "ci95": 0.114603,
+    "edge50": -0.020548
+  },
+  {
+    "hour": 11,
+    "macro": "DOWN",
+    "priceVsVwap": "BELOW",
+    "rsiZone": "NEUTRAL",
+    "n": 616,
+    "upRate": 0.5,
+    "ci95": 0.039485,
+    "edge50": 0
+  },
+  {
+    "hour": 11,
+    "macro": "DOWN",
+    "priceVsVwap": "BELOW",
+    "rsiZone": "OVERBOUGHT",
+    "n": 314,
+    "upRate": 0.461783,
+    "ci95": 0.055143,
+    "edge50": -0.038217
+  },
+  {
+    "hour": 11,
+    "macro": "DOWN",
+    "priceVsVwap": "BELOW",
+    "rsiZone": "OVERSOLD",
+    "n": 532,
+    "upRate": 0.509398,
+    "ci95": 0.042481,
+    "edge50": 0.009398
+  },
+  {
+    "hour": 11,
+    "macro": "UP",
+    "priceVsVwap": "ABOVE",
+    "rsiZone": "NEUTRAL",
+    "n": 668,
+    "upRate": 0.489521,
+    "ci95": 0.037909,
+    "edge50": -0.010479
+  },
+  {
+    "hour": 11,
+    "macro": "UP",
+    "priceVsVwap": "ABOVE",
+    "rsiZone": "OVERBOUGHT",
+    "n": 590,
+    "upRate": 0.49322,
+    "ci95": 0.040342,
+    "edge50": -0.00678
+  },
+  {
+    "hour": 11,
+    "macro": "UP",
+    "priceVsVwap": "ABOVE",
+    "rsiZone": "OVERSOLD",
+    "n": 296,
+    "upRate": 0.506757,
+    "ci95": 0.056956,
+    "edge50": 0.006757
+  },
+  {
+    "hour": 11,
+    "macro": "UP",
+    "priceVsVwap": "BELOW",
+    "rsiZone": "NEUTRAL",
+    "n": 298,
+    "upRate": 0.536913,
+    "ci95": 0.056615,
+    "edge50": 0.036913
+  },
+  {
+    "hour": 11,
+    "macro": "UP",
+    "priceVsVwap": "BELOW",
+    "rsiZone": "OVERBOUGHT",
+    "n": 87,
+    "upRate": 0.448276,
+    "ci95": 0.104503,
+    "edge50": -0.051724
+  },
+  {
+    "hour": 11,
+    "macro": "UP",
+    "priceVsVwap": "BELOW",
+    "rsiZone": "OVERSOLD",
+    "n": 233,
+    "upRate": 0.592275,
+    "ci95": 0.063099,
+    "edge50": 0.092275
+  },
+  {
+    "hour": 12,
+    "macro": "DOWN",
+    "priceVsVwap": "ABOVE",
+    "rsiZone": "NEUTRAL",
+    "n": 390,
+    "upRate": 0.476923,
+    "ci95": 0.049571,
+    "edge50": -0.023077
+  },
+  {
+    "hour": 12,
+    "macro": "DOWN",
+    "priceVsVwap": "ABOVE",
+    "rsiZone": "OVERBOUGHT",
+    "n": 283,
+    "upRate": 0.427562,
+    "ci95": 0.05764,
+    "edge50": -0.072438
+  },
+  {
+    "hour": 12,
+    "macro": "DOWN",
+    "priceVsVwap": "ABOVE",
+    "rsiZone": "OVERSOLD",
+    "n": 105,
+    "upRate": 0.504762,
+    "ci95": 0.095634,
+    "edge50": 0.004762
+  },
+  {
+    "hour": 12,
+    "macro": "DOWN",
+    "priceVsVwap": "BELOW",
+    "rsiZone": "NEUTRAL",
+    "n": 647,
+    "upRate": 0.483771,
+    "ci95": 0.038507,
+    "edge50": -0.016229
+  },
+  {
+    "hour": 12,
+    "macro": "DOWN",
+    "priceVsVwap": "BELOW",
+    "rsiZone": "OVERBOUGHT",
+    "n": 206,
+    "upRate": 0.475728,
+    "ci95": 0.068199,
+    "edge50": -0.024272
+  },
+  {
+    "hour": 12,
+    "macro": "DOWN",
+    "priceVsVwap": "BELOW",
+    "rsiZone": "OVERSOLD",
+    "n": 613,
+    "upRate": 0.526917,
+    "ci95": 0.039524,
+    "edge50": 0.026917
+  },
+  {
+    "hour": 12,
+    "macro": "UP",
+    "priceVsVwap": "ABOVE",
+    "rsiZone": "NEUTRAL",
+    "n": 657,
+    "upRate": 0.508371,
+    "ci95": 0.038228,
+    "edge50": 0.008371
+  },
+  {
+    "hour": 12,
+    "macro": "UP",
+    "priceVsVwap": "ABOVE",
+    "rsiZone": "OVERBOUGHT",
+    "n": 578,
+    "upRate": 0.512111,
+    "ci95": 0.040751,
+    "edge50": 0.012111
+  },
+  {
+    "hour": 12,
+    "macro": "UP",
+    "priceVsVwap": "ABOVE",
+    "rsiZone": "OVERSOLD",
+    "n": 268,
+    "upRate": 0.548507,
+    "ci95": 0.059581,
+    "edge50": 0.048507
+  },
+  {
+    "hour": 12,
+    "macro": "UP",
+    "priceVsVwap": "BELOW",
+    "rsiZone": "NEUTRAL",
+    "n": 292,
+    "upRate": 0.455479,
+    "ci95": 0.057122,
+    "edge50": -0.044521
+  },
+  {
+    "hour": 12,
+    "macro": "UP",
+    "priceVsVwap": "BELOW",
+    "rsiZone": "OVERBOUGHT",
+    "n": 111,
+    "upRate": 0.459459,
+    "ci95": 0.092711,
+    "edge50": -0.040541
+  },
+  {
+    "hour": 12,
+    "macro": "UP",
+    "priceVsVwap": "BELOW",
+    "rsiZone": "OVERSOLD",
+    "n": 206,
+    "upRate": 0.572816,
+    "ci95": 0.067552,
+    "edge50": 0.072816
+  },
+  {
+    "hour": 13,
+    "macro": "DOWN",
+    "priceVsVwap": "ABOVE",
+    "rsiZone": "NEUTRAL",
+    "n": 360,
+    "upRate": 0.45,
+    "ci95": 0.051392,
+    "edge50": -0.05
+  },
+  {
+    "hour": 13,
+    "macro": "DOWN",
+    "priceVsVwap": "ABOVE",
+    "rsiZone": "OVERBOUGHT",
+    "n": 255,
+    "upRate": 0.415686,
+    "ci95": 0.060491,
+    "edge50": -0.084314
+  },
+  {
+    "hour": 13,
+    "macro": "DOWN",
+    "priceVsVwap": "ABOVE",
+    "rsiZone": "OVERSOLD",
+    "n": 104,
+    "upRate": 0.509615,
+    "ci95": 0.096079,
+    "edge50": 0.009615
+  },
+  {
+    "hour": 13,
+    "macro": "DOWN",
+    "priceVsVwap": "BELOW",
+    "rsiZone": "NEUTRAL",
+    "n": 762,
+    "upRate": 0.502625,
+    "ci95": 0.035501,
+    "edge50": 0.002625
+  },
+  {
+    "hour": 13,
+    "macro": "DOWN",
+    "priceVsVwap": "BELOW",
+    "rsiZone": "OVERBOUGHT",
+    "n": 155,
+    "upRate": 0.406452,
+    "ci95": 0.077325,
+    "edge50": -0.093548
+  },
+  {
+    "hour": 13,
+    "macro": "DOWN",
+    "priceVsVwap": "BELOW",
+    "rsiZone": "OVERSOLD",
+    "n": 704,
+    "upRate": 0.524148,
+    "ci95": 0.036892,
+    "edge50": 0.024148
+  },
+  {
+    "hour": 13,
+    "macro": "UP",
+    "priceVsVwap": "ABOVE",
+    "rsiZone": "NEUTRAL",
+    "n": 652,
+    "upRate": 0.542945,
+    "ci95": 0.038238,
+    "edge50": 0.042945
+  },
+  {
+    "hour": 13,
+    "macro": "UP",
+    "priceVsVwap": "ABOVE",
+    "rsiZone": "OVERBOUGHT",
+    "n": 686,
+    "upRate": 0.495627,
+    "ci95": 0.037415,
+    "edge50": -0.004373
+  },
+  {
+    "hour": 13,
+    "macro": "UP",
+    "priceVsVwap": "ABOVE",
+    "rsiZone": "OVERSOLD",
+    "n": 176,
+    "upRate": 0.5,
+    "ci95": 0.07387,
+    "edge50": 0
+  },
+  {
+    "hour": 13,
+    "macro": "UP",
+    "priceVsVwap": "BELOW",
+    "rsiZone": "NEUTRAL",
+    "n": 245,
+    "upRate": 0.608163,
+    "ci95": 0.061127,
+    "edge50": 0.108163
+  },
+  {
+    "hour": 13,
+    "macro": "UP",
+    "priceVsVwap": "BELOW",
+    "rsiZone": "OVERBOUGHT",
+    "n": 37,
+    "upRate": 0.540541,
+    "ci95": 0.160581,
+    "edge50": 0.040541
+  },
+  {
+    "hour": 13,
+    "macro": "UP",
+    "priceVsVwap": "BELOW",
+    "rsiZone": "OVERSOLD",
+    "n": 220,
+    "upRate": 0.631818,
+    "ci95": 0.063734,
+    "edge50": 0.131818
+  },
+  {
+    "hour": 14,
+    "macro": "DOWN",
+    "priceVsVwap": "ABOVE",
+    "rsiZone": "NEUTRAL",
+    "n": 363,
+    "upRate": 0.4573,
+    "ci95": 0.051249,
+    "edge50": -0.0427
+  },
+  {
+    "hour": 14,
+    "macro": "DOWN",
+    "priceVsVwap": "ABOVE",
+    "rsiZone": "OVERBOUGHT",
+    "n": 286,
+    "upRate": 0.405594,
+    "ci95": 0.056906,
+    "edge50": -0.094406
+  },
+  {
+    "hour": 14,
+    "macro": "DOWN",
+    "priceVsVwap": "ABOVE",
+    "rsiZone": "OVERSOLD",
+    "n": 86,
+    "upRate": 0.453488,
+    "ci95": 0.105218,
+    "edge50": -0.046512
+  },
+  {
+    "hour": 14,
+    "macro": "DOWN",
+    "priceVsVwap": "BELOW",
+    "rsiZone": "NEUTRAL",
+    "n": 704,
+    "upRate": 0.43892,
+    "ci95": 0.036659,
+    "edge50": -0.06108
+  },
+  {
+    "hour": 14,
+    "macro": "DOWN",
+    "priceVsVwap": "BELOW",
+    "rsiZone": "OVERBOUGHT",
+    "n": 145,
+    "upRate": 0.489655,
+    "ci95": 0.081367,
+    "edge50": -0.010345
+  },
+  {
+    "hour": 14,
+    "macro": "DOWN",
+    "priceVsVwap": "BELOW",
+    "rsiZone": "OVERSOLD",
+    "n": 840,
+    "upRate": 0.52619,
+    "ci95": 0.033767,
+    "edge50": 0.02619
+  },
+  {
+    "hour": 14,
+    "macro": "UP",
+    "priceVsVwap": "ABOVE",
+    "rsiZone": "NEUTRAL",
+    "n": 631,
+    "upRate": 0.518225,
+    "ci95": 0.038987,
+    "edge50": 0.018225
+  },
+  {
+    "hour": 14,
+    "macro": "UP",
+    "priceVsVwap": "ABOVE",
+    "rsiZone": "OVERBOUGHT",
+    "n": 681,
+    "upRate": 0.508076,
+    "ci95": 0.037549,
+    "edge50": 0.008076
+  },
+  {
+    "hour": 14,
+    "macro": "UP",
+    "priceVsVwap": "ABOVE",
+    "rsiZone": "OVERSOLD",
+    "n": 101,
+    "upRate": 0.613861,
+    "ci95": 0.094952,
+    "edge50": 0.113861
+  },
+  {
+    "hour": 14,
+    "macro": "UP",
+    "priceVsVwap": "BELOW",
+    "rsiZone": "NEUTRAL",
+    "n": 254,
+    "upRate": 0.586614,
+    "ci95": 0.060561,
+    "edge50": 0.086614
+  },
+  {
+    "hour": 14,
+    "macro": "UP",
+    "priceVsVwap": "BELOW",
+    "rsiZone": "OVERBOUGHT",
+    "n": 54,
+    "upRate": 0.5,
+    "ci95": 0.133361,
+    "edge50": 0
+  },
+  {
+    "hour": 14,
+    "macro": "UP",
+    "priceVsVwap": "BELOW",
+    "rsiZone": "OVERSOLD",
+    "n": 211,
+    "upRate": 0.606635,
+    "ci95": 0.065914,
+    "edge50": 0.106635
+  },
+  {
+    "hour": 15,
+    "macro": "DOWN",
+    "priceVsVwap": "ABOVE",
+    "rsiZone": "NEUTRAL",
+    "n": 258,
+    "upRate": 0.434109,
+    "ci95": 0.06048,
+    "edge50": -0.065891
+  },
+  {
+    "hour": 15,
+    "macro": "DOWN",
+    "priceVsVwap": "ABOVE",
+    "rsiZone": "OVERBOUGHT",
+    "n": 270,
+    "upRate": 0.477778,
+    "ci95": 0.059582,
+    "edge50": -0.022222
+  },
+  {
+    "hour": 15,
+    "macro": "DOWN",
+    "priceVsVwap": "ABOVE",
+    "rsiZone": "OVERSOLD",
+    "n": 47,
+    "upRate": 0.531915,
+    "ci95": 0.142656,
+    "edge50": 0.031915
+  },
+  {
+    "hour": 15,
+    "macro": "DOWN",
+    "priceVsVwap": "BELOW",
+    "rsiZone": "NEUTRAL",
+    "n": 714,
+    "upRate": 0.466387,
+    "ci95": 0.036593,
+    "edge50": -0.033613
+  },
+  {
+    "hour": 15,
+    "macro": "DOWN",
+    "priceVsVwap": "BELOW",
+    "rsiZone": "OVERBOUGHT",
+    "n": 117,
+    "upRate": 0.34188,
+    "ci95": 0.085951,
+    "edge50": -0.15812
+  },
+  {
+    "hour": 15,
+    "macro": "DOWN",
+    "priceVsVwap": "BELOW",
+    "rsiZone": "OVERSOLD",
+    "n": 766,
+    "upRate": 0.492167,
+    "ci95": 0.035404,
+    "edge50": -0.007833
+  },
+  {
+    "hour": 15,
+    "macro": "UP",
+    "priceVsVwap": "ABOVE",
+    "rsiZone": "NEUTRAL",
+    "n": 664,
+    "upRate": 0.546687,
+    "ci95": 0.037865,
+    "edge50": 0.046687
+  },
+  {
+    "hour": 15,
+    "macro": "UP",
+    "priceVsVwap": "ABOVE",
+    "rsiZone": "OVERBOUGHT",
+    "n": 726,
+    "upRate": 0.513774,
+    "ci95": 0.036357,
+    "edge50": 0.013774
+  },
+  {
+    "hour": 15,
+    "macro": "UP",
+    "priceVsVwap": "ABOVE",
+    "rsiZone": "OVERSOLD",
+    "n": 164,
+    "upRate": 0.536585,
+    "ci95": 0.07632,
+    "edge50": 0.036585
+  },
+  {
+    "hour": 15,
+    "macro": "UP",
+    "priceVsVwap": "BELOW",
+    "rsiZone": "NEUTRAL",
+    "n": 335,
+    "upRate": 0.576119,
+    "ci95": 0.052919,
+    "edge50": 0.076119
+  },
+  {
+    "hour": 15,
+    "macro": "UP",
+    "priceVsVwap": "BELOW",
+    "rsiZone": "OVERBOUGHT",
+    "n": 60,
+    "upRate": 0.55,
+    "ci95": 0.125883,
+    "edge50": 0.05
+  },
+  {
+    "hour": 15,
+    "macro": "UP",
+    "priceVsVwap": "BELOW",
+    "rsiZone": "OVERSOLD",
+    "n": 235,
+    "upRate": 0.587234,
+    "ci95": 0.062948,
+    "edge50": 0.087234
+  },
+  {
+    "hour": 16,
+    "macro": "DOWN",
+    "priceVsVwap": "ABOVE",
+    "rsiZone": "NEUTRAL",
+    "n": 254,
+    "upRate": 0.440945,
+    "ci95": 0.06106,
+    "edge50": -0.059055
+  },
+  {
+    "hour": 16,
+    "macro": "DOWN",
+    "priceVsVwap": "ABOVE",
+    "rsiZone": "OVERBOUGHT",
+    "n": 201,
+    "upRate": 0.358209,
+    "ci95": 0.066286,
+    "edge50": -0.141791
+  },
+  {
+    "hour": 16,
+    "macro": "DOWN",
+    "priceVsVwap": "ABOVE",
+    "rsiZone": "OVERSOLD",
+    "n": 46,
+    "upRate": 0.5,
+    "ci95": 0.144493,
+    "edge50": 0
+  },
+  {
+    "hour": 16,
+    "macro": "DOWN",
+    "priceVsVwap": "BELOW",
+    "rsiZone": "NEUTRAL",
+    "n": 755,
+    "upRate": 0.476821,
+    "ci95": 0.035628,
+    "edge50": -0.023179
+  },
+  {
+    "hour": 16,
+    "macro": "DOWN",
+    "priceVsVwap": "BELOW",
+    "rsiZone": "OVERBOUGHT",
+    "n": 161,
+    "upRate": 0.341615,
+    "ci95": 0.073257,
+    "edge50": -0.158385
+  },
+  {
+    "hour": 16,
+    "macro": "DOWN",
+    "priceVsVwap": "BELOW",
+    "rsiZone": "OVERSOLD",
+    "n": 779,
+    "upRate": 0.50706,
+    "ci95": 0.035109,
+    "edge50": 0.00706
+  },
+  {
+    "hour": 16,
+    "macro": "UP",
+    "priceVsVwap": "ABOVE",
+    "rsiZone": "NEUTRAL",
+    "n": 720,
+    "upRate": 0.493056,
+    "ci95": 0.036519,
+    "edge50": -0.006944
+  },
+  {
+    "hour": 16,
+    "macro": "UP",
+    "priceVsVwap": "ABOVE",
+    "rsiZone": "OVERBOUGHT",
+    "n": 747,
+    "upRate": 0.449799,
+    "ci95": 0.035675,
+    "edge50": -0.050201
+  },
+  {
+    "hour": 16,
+    "macro": "UP",
+    "priceVsVwap": "ABOVE",
+    "rsiZone": "OVERSOLD",
+    "n": 191,
+    "upRate": 0.60733,
+    "ci95": 0.069257,
+    "edge50": 0.10733
+  },
+  {
+    "hour": 16,
+    "macro": "UP",
+    "priceVsVwap": "BELOW",
+    "rsiZone": "NEUTRAL",
+    "n": 253,
+    "upRate": 0.565217,
+    "ci95": 0.061086,
+    "edge50": 0.065217
+  },
+  {
+    "hour": 16,
+    "macro": "UP",
+    "priceVsVwap": "BELOW",
+    "rsiZone": "OVERBOUGHT",
+    "n": 79,
+    "upRate": 0.518987,
+    "ci95": 0.110179,
+    "edge50": 0.018987
+  },
+  {
+    "hour": 16,
+    "macro": "UP",
+    "priceVsVwap": "BELOW",
+    "rsiZone": "OVERSOLD",
+    "n": 162,
+    "upRate": 0.574074,
+    "ci95": 0.076146,
+    "edge50": 0.074074
+  },
+  {
+    "hour": 17,
+    "macro": "DOWN",
+    "priceVsVwap": "ABOVE",
+    "rsiZone": "NEUTRAL",
+    "n": 250,
+    "upRate": 0.5,
+    "ci95": 0.061981,
+    "edge50": 0
+  },
+  {
+    "hour": 17,
+    "macro": "DOWN",
+    "priceVsVwap": "ABOVE",
+    "rsiZone": "OVERBOUGHT",
+    "n": 155,
+    "upRate": 0.4,
+    "ci95": 0.077125,
+    "edge50": -0.1
+  },
+  {
+    "hour": 17,
+    "macro": "DOWN",
+    "priceVsVwap": "ABOVE",
+    "rsiZone": "OVERSOLD",
+    "n": 81,
+    "upRate": 0.432099,
+    "ci95": 0.10788,
+    "edge50": -0.067901
+  },
+  {
+    "hour": 17,
+    "macro": "DOWN",
+    "priceVsVwap": "BELOW",
+    "rsiZone": "NEUTRAL",
+    "n": 794,
+    "upRate": 0.498741,
+    "ci95": 0.034779,
+    "edge50": -0.001259
+  },
+  {
+    "hour": 17,
+    "macro": "DOWN",
+    "priceVsVwap": "BELOW",
+    "rsiZone": "OVERBOUGHT",
+    "n": 235,
+    "upRate": 0.438298,
+    "ci95": 0.06344,
+    "edge50": -0.061702
+  },
+  {
+    "hour": 17,
+    "macro": "DOWN",
+    "priceVsVwap": "BELOW",
+    "rsiZone": "OVERSOLD",
+    "n": 705,
+    "upRate": 0.497872,
+    "ci95": 0.036909,
+    "edge50": -0.002128
+  },
+  {
+    "hour": 17,
+    "macro": "UP",
+    "priceVsVwap": "ABOVE",
+    "rsiZone": "NEUTRAL",
+    "n": 758,
+    "upRate": 0.523747,
+    "ci95": 0.035555,
+    "edge50": 0.023747
+  },
+  {
+    "hour": 17,
+    "macro": "UP",
+    "priceVsVwap": "ABOVE",
+    "rsiZone": "OVERBOUGHT",
+    "n": 665,
+    "upRate": 0.494737,
+    "ci95": 0.038001,
+    "edge50": -0.005263
+  },
+  {
+    "hour": 17,
+    "macro": "UP",
+    "priceVsVwap": "ABOVE",
+    "rsiZone": "OVERSOLD",
+    "n": 274,
+    "upRate": 0.551095,
+    "ci95": 0.058894,
+    "edge50": 0.051095
+  },
+  {
+    "hour": 17,
+    "macro": "UP",
+    "priceVsVwap": "BELOW",
+    "rsiZone": "NEUTRAL",
+    "n": 179,
+    "upRate": 0.519553,
+    "ci95": 0.073193,
+    "edge50": 0.019553
+  },
+  {
+    "hour": 17,
+    "macro": "UP",
+    "priceVsVwap": "BELOW",
+    "rsiZone": "OVERBOUGHT",
+    "n": 92,
+    "upRate": 0.521739,
+    "ci95": 0.102075,
+    "edge50": 0.021739
+  },
+  {
+    "hour": 17,
+    "macro": "UP",
+    "priceVsVwap": "BELOW",
+    "rsiZone": "OVERSOLD",
+    "n": 156,
+    "upRate": 0.551282,
+    "ci95": 0.078049,
+    "edge50": 0.051282
+  },
+  {
+    "hour": 18,
+    "macro": "DOWN",
+    "priceVsVwap": "ABOVE",
+    "rsiZone": "NEUTRAL",
+    "n": 251,
+    "upRate": 0.426295,
+    "ci95": 0.061181,
+    "edge50": -0.073705
+  },
+  {
+    "hour": 18,
+    "macro": "DOWN",
+    "priceVsVwap": "ABOVE",
+    "rsiZone": "OVERBOUGHT",
+    "n": 139,
+    "upRate": 0.453237,
+    "ci95": 0.082758,
+    "edge50": -0.046763
+  },
+  {
+    "hour": 18,
+    "macro": "DOWN",
+    "priceVsVwap": "ABOVE",
+    "rsiZone": "OVERSOLD",
+    "n": 69,
+    "upRate": 0.521739,
+    "ci95": 0.117867,
+    "edge50": 0.021739
+  },
+  {
+    "hour": 18,
+    "macro": "DOWN",
+    "priceVsVwap": "BELOW",
+    "rsiZone": "NEUTRAL",
+    "n": 721,
+    "upRate": 0.499307,
+    "ci95": 0.036497,
+    "edge50": -0.000693
+  },
+  {
+    "hour": 18,
+    "macro": "DOWN",
+    "priceVsVwap": "BELOW",
+    "rsiZone": "OVERBOUGHT",
+    "n": 364,
+    "upRate": 0.456044,
+    "ci95": 0.051167,
+    "edge50": -0.043956
+  },
+  {
+    "hour": 18,
+    "macro": "DOWN",
+    "priceVsVwap": "BELOW",
+    "rsiZone": "OVERSOLD",
+    "n": 652,
+    "upRate": 0.521472,
+    "ci95": 0.038344,
+    "edge50": 0.021472
+  },
+  {
+    "hour": 18,
+    "macro": "UP",
+    "priceVsVwap": "ABOVE",
+    "rsiZone": "NEUTRAL",
+    "n": 761,
+    "upRate": 0.486202,
+    "ci95": 0.035511,
+    "edge50": -0.013798
+  },
+  {
+    "hour": 18,
+    "macro": "UP",
+    "priceVsVwap": "ABOVE",
+    "rsiZone": "OVERBOUGHT",
+    "n": 653,
+    "upRate": 0.502297,
+    "ci95": 0.03835,
+    "edge50": 0.002297
+  },
+  {
+    "hour": 18,
+    "macro": "UP",
+    "priceVsVwap": "ABOVE",
+    "rsiZone": "OVERSOLD",
+    "n": 270,
+    "upRate": 0.540741,
+    "ci95": 0.059443,
+    "edge50": 0.040741
+  },
+  {
+    "hour": 18,
+    "macro": "UP",
+    "priceVsVwap": "BELOW",
+    "rsiZone": "NEUTRAL",
+    "n": 221,
+    "upRate": 0.524887,
+    "ci95": 0.06584,
+    "edge50": 0.024887
+  },
+  {
+    "hour": 18,
+    "macro": "UP",
+    "priceVsVwap": "BELOW",
+    "rsiZone": "OVERBOUGHT",
+    "n": 62,
+    "upRate": 0.580645,
+    "ci95": 0.122831,
+    "edge50": 0.080645
+  },
+  {
+    "hour": 18,
+    "macro": "UP",
+    "priceVsVwap": "BELOW",
+    "rsiZone": "OVERSOLD",
+    "n": 181,
+    "upRate": 0.558011,
+    "ci95": 0.072351,
+    "edge50": 0.058011
+  },
+  {
+    "hour": 19,
+    "macro": "DOWN",
+    "priceVsVwap": "ABOVE",
+    "rsiZone": "NEUTRAL",
+    "n": 236,
+    "upRate": 0.461864,
+    "ci95": 0.063607,
+    "edge50": -0.038136
+  },
+  {
+    "hour": 19,
+    "macro": "DOWN",
+    "priceVsVwap": "ABOVE",
+    "rsiZone": "OVERBOUGHT",
+    "n": 232,
+    "upRate": 0.5,
+    "ci95": 0.06434,
+    "edge50": 0
+  },
+  {
+    "hour": 19,
+    "macro": "DOWN",
+    "priceVsVwap": "ABOVE",
+    "rsiZone": "OVERSOLD",
+    "n": 57,
+    "upRate": 0.666667,
+    "ci95": 0.122381,
+    "edge50": 0.166667
+  },
+  {
+    "hour": 19,
+    "macro": "DOWN",
+    "priceVsVwap": "BELOW",
+    "rsiZone": "NEUTRAL",
+    "n": 822,
+    "upRate": 0.453771,
+    "ci95": 0.034035,
+    "edge50": -0.046229
+  },
+  {
+    "hour": 19,
+    "macro": "DOWN",
+    "priceVsVwap": "BELOW",
+    "rsiZone": "OVERBOUGHT",
+    "n": 256,
+    "upRate": 0.464844,
+    "ci95": 0.061098,
+    "edge50": -0.035156
+  },
+  {
+    "hour": 19,
+    "macro": "DOWN",
+    "priceVsVwap": "BELOW",
+    "rsiZone": "OVERSOLD",
+    "n": 689,
+    "upRate": 0.489115,
+    "ci95": 0.037326,
+    "edge50": -0.010885
+  },
+  {
+    "hour": 19,
+    "macro": "UP",
+    "priceVsVwap": "ABOVE",
+    "rsiZone": "NEUTRAL",
+    "n": 761,
+    "upRate": 0.51774,
+    "ci95": 0.035503,
+    "edge50": 0.01774
+  },
+  {
+    "hour": 19,
+    "macro": "UP",
+    "priceVsVwap": "ABOVE",
+    "rsiZone": "OVERBOUGHT",
+    "n": 650,
+    "upRate": 0.486154,
+    "ci95": 0.038424,
+    "edge50": -0.013846
+  },
+  {
+    "hour": 19,
+    "macro": "UP",
+    "priceVsVwap": "ABOVE",
+    "rsiZone": "OVERSOLD",
+    "n": 280,
+    "upRate": 0.475,
+    "ci95": 0.058493,
+    "edge50": -0.025
+  },
+  {
+    "hour": 19,
+    "macro": "UP",
+    "priceVsVwap": "BELOW",
+    "rsiZone": "NEUTRAL",
+    "n": 174,
+    "upRate": 0.528736,
+    "ci95": 0.074171,
+    "edge50": 0.028736
+  },
+  {
+    "hour": 19,
+    "macro": "UP",
+    "priceVsVwap": "BELOW",
+    "rsiZone": "OVERBOUGHT",
+    "n": 80,
+    "upRate": 0.5625,
+    "ci95": 0.108708,
+    "edge50": 0.0625
+  },
+  {
+    "hour": 19,
+    "macro": "UP",
+    "priceVsVwap": "BELOW",
+    "rsiZone": "OVERSOLD",
+    "n": 119,
+    "upRate": 0.554622,
+    "ci95": 0.089299,
+    "edge50": 0.054622
+  },
+  {
+    "hour": 20,
+    "macro": "DOWN",
+    "priceVsVwap": "ABOVE",
+    "rsiZone": "NEUTRAL",
+    "n": 234,
+    "upRate": 0.487179,
+    "ci95": 0.064044,
+    "edge50": -0.012821
+  },
+  {
+    "hour": 20,
+    "macro": "DOWN",
+    "priceVsVwap": "ABOVE",
+    "rsiZone": "OVERBOUGHT",
+    "n": 140,
+    "upRate": 0.378571,
+    "ci95": 0.080346,
+    "edge50": -0.121429
+  },
+  {
+    "hour": 20,
+    "macro": "DOWN",
+    "priceVsVwap": "ABOVE",
+    "rsiZone": "OVERSOLD",
+    "n": 64,
+    "upRate": 0.578125,
+    "ci95": 0.120995,
+    "edge50": 0.078125
+  },
+  {
+    "hour": 20,
+    "macro": "DOWN",
+    "priceVsVwap": "BELOW",
+    "rsiZone": "NEUTRAL",
+    "n": 779,
+    "upRate": 0.514763,
+    "ci95": 0.035097,
+    "edge50": 0.014763
+  },
+  {
+    "hour": 20,
+    "macro": "DOWN",
+    "priceVsVwap": "BELOW",
+    "rsiZone": "OVERBOUGHT",
+    "n": 350,
+    "upRate": 0.522857,
+    "ci95": 0.052328,
+    "edge50": 0.022857
+  },
+  {
+    "hour": 20,
+    "macro": "DOWN",
+    "priceVsVwap": "BELOW",
+    "rsiZone": "OVERSOLD",
+    "n": 593,
+    "upRate": 0.519393,
+    "ci95": 0.040213,
+    "edge50": 0.019393
+  },
+  {
+    "hour": 20,
+    "macro": "UP",
+    "priceVsVwap": "ABOVE",
+    "rsiZone": "NEUTRAL",
+    "n": 806,
+    "upRate": 0.521092,
+    "ci95": 0.034488,
+    "edge50": 0.021092
+  },
+  {
+    "hour": 20,
+    "macro": "UP",
+    "priceVsVwap": "ABOVE",
+    "rsiZone": "OVERBOUGHT",
+    "n": 621,
+    "upRate": 0.447665,
+    "ci95": 0.03911,
+    "edge50": -0.052335
+  },
+  {
+    "hour": 20,
+    "macro": "UP",
+    "priceVsVwap": "ABOVE",
+    "rsiZone": "OVERSOLD",
+    "n": 353,
+    "upRate": 0.535411,
+    "ci95": 0.052029,
+    "edge50": 0.035411
+  },
+  {
+    "hour": 20,
+    "macro": "UP",
+    "priceVsVwap": "BELOW",
+    "rsiZone": "NEUTRAL",
+    "n": 196,
+    "upRate": 0.617347,
+    "ci95": 0.068045,
+    "edge50": 0.117347
+  },
+  {
+    "hour": 20,
+    "macro": "UP",
+    "priceVsVwap": "BELOW",
+    "rsiZone": "OVERBOUGHT",
+    "n": 125,
+    "upRate": 0.552,
+    "ci95": 0.087179,
+    "edge50": 0.052
+  },
+  {
+    "hour": 20,
+    "macro": "UP",
+    "priceVsVwap": "BELOW",
+    "rsiZone": "OVERSOLD",
+    "n": 95,
+    "upRate": 0.652632,
+    "ci95": 0.095747,
+    "edge50": 0.152632
+  },
+  {
+    "hour": 21,
+    "macro": "DOWN",
+    "priceVsVwap": "ABOVE",
+    "rsiZone": "NEUTRAL",
+    "n": 203,
+    "upRate": 0.507389,
+    "ci95": 0.068775,
+    "edge50": 0.007389
+  },
+  {
+    "hour": 21,
+    "macro": "DOWN",
+    "priceVsVwap": "ABOVE",
+    "rsiZone": "OVERBOUGHT",
+    "n": 188,
+    "upRate": 0.537234,
+    "ci95": 0.071275,
+    "edge50": 0.037234
+  },
+  {
+    "hour": 21,
+    "macro": "DOWN",
+    "priceVsVwap": "ABOVE",
+    "rsiZone": "OVERSOLD",
+    "n": 105,
+    "upRate": 0.504762,
+    "ci95": 0.095634,
+    "edge50": 0.004762
+  },
+  {
+    "hour": 21,
+    "macro": "DOWN",
+    "priceVsVwap": "BELOW",
+    "rsiZone": "NEUTRAL",
+    "n": 795,
+    "upRate": 0.509434,
+    "ci95": 0.034751,
+    "edge50": 0.009434
+  },
+  {
+    "hour": 21,
+    "macro": "DOWN",
+    "priceVsVwap": "BELOW",
+    "rsiZone": "OVERBOUGHT",
+    "n": 514,
+    "upRate": 0.498054,
+    "ci95": 0.043226,
+    "edge50": -0.001946
+  },
+  {
+    "hour": 21,
+    "macro": "DOWN",
+    "priceVsVwap": "BELOW",
+    "rsiZone": "OVERSOLD",
+    "n": 403,
+    "upRate": 0.533499,
+    "ci95": 0.048708,
+    "edge50": 0.033499
+  },
+  {
+    "hour": 21,
+    "macro": "UP",
+    "priceVsVwap": "ABOVE",
+    "rsiZone": "NEUTRAL",
+    "n": 905,
+    "upRate": 0.498343,
+    "ci95": 0.032576,
+    "edge50": -0.001657
+  },
+  {
+    "hour": 21,
+    "macro": "UP",
+    "priceVsVwap": "ABOVE",
+    "rsiZone": "OVERBOUGHT",
+    "n": 514,
+    "upRate": 0.5,
+    "ci95": 0.043226,
+    "edge50": 0
+  },
+  {
+    "hour": 21,
+    "macro": "UP",
+    "priceVsVwap": "ABOVE",
+    "rsiZone": "OVERSOLD",
+    "n": 341,
+    "upRate": 0.536657,
+    "ci95": 0.052927,
+    "edge50": 0.036657
+  },
+  {
+    "hour": 21,
+    "macro": "UP",
+    "priceVsVwap": "BELOW",
+    "rsiZone": "NEUTRAL",
+    "n": 167,
+    "upRate": 0.54491,
+    "ci95": 0.075528,
+    "edge50": 0.04491
+  },
+  {
+    "hour": 21,
+    "macro": "UP",
+    "priceVsVwap": "BELOW",
+    "rsiZone": "OVERBOUGHT",
+    "n": 81,
+    "upRate": 0.518519,
+    "ci95": 0.108814,
+    "edge50": 0.018519
+  },
+  {
+    "hour": 21,
+    "macro": "UP",
+    "priceVsVwap": "BELOW",
+    "rsiZone": "OVERSOLD",
+    "n": 140,
+    "upRate": 0.592857,
+    "ci95": 0.081384,
+    "edge50": 0.092857
+  },
+  {
+    "hour": 22,
+    "macro": "DOWN",
+    "priceVsVwap": "ABOVE",
+    "rsiZone": "NEUTRAL",
+    "n": 214,
+    "upRate": 0.481308,
+    "ci95": 0.066945,
+    "edge50": -0.018692
+  },
+  {
+    "hour": 22,
+    "macro": "DOWN",
+    "priceVsVwap": "ABOVE",
+    "rsiZone": "OVERBOUGHT",
+    "n": 180,
+    "upRate": 0.427778,
+    "ci95": 0.072279,
+    "edge50": -0.072222
+  },
+  {
+    "hour": 22,
+    "macro": "DOWN",
+    "priceVsVwap": "ABOVE",
+    "rsiZone": "OVERSOLD",
+    "n": 95,
+    "upRate": 0.557895,
+    "ci95": 0.09987,
+    "edge50": 0.057895
+  },
+  {
+    "hour": 22,
+    "macro": "DOWN",
+    "priceVsVwap": "BELOW",
+    "rsiZone": "NEUTRAL",
+    "n": 820,
+    "upRate": 0.504878,
+    "ci95": 0.034221,
+    "edge50": 0.004878
+  },
+  {
+    "hour": 22,
+    "macro": "DOWN",
+    "priceVsVwap": "BELOW",
+    "rsiZone": "OVERBOUGHT",
+    "n": 399,
+    "upRate": 0.483709,
+    "ci95": 0.049035,
+    "edge50": -0.016291
+  },
+  {
+    "hour": 22,
+    "macro": "DOWN",
+    "priceVsVwap": "BELOW",
+    "rsiZone": "OVERSOLD",
+    "n": 476,
+    "upRate": 0.573529,
+    "ci95": 0.04443,
+    "edge50": 0.073529
+  },
+  {
+    "hour": 22,
+    "macro": "UP",
+    "priceVsVwap": "ABOVE",
+    "rsiZone": "NEUTRAL",
+    "n": 758,
+    "upRate": 0.497361,
+    "ci95": 0.035595,
+    "edge50": -0.002639
+  },
+  {
+    "hour": 22,
+    "macro": "UP",
+    "priceVsVwap": "ABOVE",
+    "rsiZone": "OVERBOUGHT",
+    "n": 735,
+    "upRate": 0.491156,
+    "ci95": 0.036142,
+    "edge50": -0.008844
+  },
+  {
+    "hour": 22,
+    "macro": "UP",
+    "priceVsVwap": "ABOVE",
+    "rsiZone": "OVERSOLD",
+    "n": 275,
+    "upRate": 0.487273,
+    "ci95": 0.059077,
+    "edge50": -0.012727
+  },
+  {
+    "hour": 22,
+    "macro": "UP",
+    "priceVsVwap": "BELOW",
+    "rsiZone": "NEUTRAL",
+    "n": 217,
+    "upRate": 0.552995,
+    "ci95": 0.066152,
+    "edge50": 0.052995
+  },
+  {
+    "hour": 22,
+    "macro": "UP",
+    "priceVsVwap": "BELOW",
+    "rsiZone": "OVERBOUGHT",
+    "n": 62,
+    "upRate": 0.516129,
+    "ci95": 0.124395,
+    "edge50": 0.016129
+  },
+  {
+    "hour": 22,
+    "macro": "UP",
+    "priceVsVwap": "BELOW",
+    "rsiZone": "OVERSOLD",
+    "n": 125,
+    "upRate": 0.472,
+    "ci95": 0.087516,
+    "edge50": -0.028
+  },
+  {
+    "hour": 23,
+    "macro": "DOWN",
+    "priceVsVwap": "ABOVE",
+    "rsiZone": "NEUTRAL",
+    "n": 195,
+    "upRate": 0.435897,
+    "ci95": 0.0696,
+    "edge50": -0.064103
+  },
+  {
+    "hour": 23,
+    "macro": "DOWN",
+    "priceVsVwap": "ABOVE",
+    "rsiZone": "OVERBOUGHT",
+    "n": 121,
+    "upRate": 0.429752,
+    "ci95": 0.088207,
+    "edge50": -0.070248
+  },
+  {
+    "hour": 23,
+    "macro": "DOWN",
+    "priceVsVwap": "ABOVE",
+    "rsiZone": "OVERSOLD",
+    "n": 106,
+    "upRate": 0.528302,
+    "ci95": 0.095033,
+    "edge50": 0.028302
+  },
+  {
+    "hour": 23,
+    "macro": "DOWN",
+    "priceVsVwap": "BELOW",
+    "rsiZone": "NEUTRAL",
+    "n": 851,
+    "upRate": 0.515864,
+    "ci95": 0.033577,
+    "edge50": 0.015864
+  },
+  {
+    "hour": 23,
+    "macro": "DOWN",
+    "priceVsVwap": "BELOW",
+    "rsiZone": "OVERBOUGHT",
+    "n": 345,
+    "upRate": 0.434783,
+    "ci95": 0.052311,
+    "edge50": -0.065217
+  },
+  {
+    "hour": 23,
+    "macro": "DOWN",
+    "priceVsVwap": "BELOW",
+    "rsiZone": "OVERSOLD",
+    "n": 506,
+    "upRate": 0.51581,
+    "ci95": 0.043545,
+    "edge50": 0.01581
+  },
+  {
+    "hour": 23,
+    "macro": "UP",
+    "priceVsVwap": "ABOVE",
+    "rsiZone": "NEUTRAL",
+    "n": 777,
+    "upRate": 0.47619,
+    "ci95": 0.035117,
+    "edge50": -0.02381
+  },
+  {
+    "hour": 23,
+    "macro": "UP",
+    "priceVsVwap": "ABOVE",
+    "rsiZone": "OVERBOUGHT",
+    "n": 603,
+    "upRate": 0.442786,
+    "ci95": 0.039647,
+    "edge50": -0.057214
+  },
+  {
+    "hour": 23,
+    "macro": "UP",
+    "priceVsVwap": "ABOVE",
+    "rsiZone": "OVERSOLD",
+    "n": 464,
+    "upRate": 0.478448,
+    "ci95": 0.045453,
+    "edge50": -0.021552
+  },
+  {
+    "hour": 23,
+    "macro": "UP",
+    "priceVsVwap": "BELOW",
+    "rsiZone": "NEUTRAL",
+    "n": 150,
+    "upRate": 0.533333,
+    "ci95": 0.079839,
+    "edge50": 0.033333
+  },
+  {
+    "hour": 23,
+    "macro": "UP",
+    "priceVsVwap": "BELOW",
+    "rsiZone": "OVERBOUGHT",
+    "n": 64,
+    "upRate": 0.515625,
+    "ci95": 0.12244,
+    "edge50": 0.015625
+  },
+  {
+    "hour": 23,
+    "macro": "UP",
+    "priceVsVwap": "BELOW",
+    "rsiZone": "OVERSOLD",
+    "n": 174,
+    "upRate": 0.557471,
+    "ci95": 0.073801,
+    "edge50": 0.057471
+  }
+]

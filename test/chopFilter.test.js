@@ -86,7 +86,7 @@ test("decide blocks trade when BB Width is below minimum", () => {
     modelDown: 0.4,
     regime: "TREND_UP",
     chop: 40.0,
-    bbWidthPct: 0.5
+    bbWidthPct: 0.05
   });
   assert.equal(rec.action, "NO_TRADE");
   assert.ok(rec.reason.startsWith("bb_width_"), `expected bb_width reason, got ${rec.reason}`);
@@ -101,7 +101,7 @@ test("decide allows trade when CHOP and BB Width are healthy", () => {
     modelDown: 0.4,
     regime: "TREND_UP",
     chop: 35.0,
-    bbWidthPct: 2.5
+    bbWidthPct: 0.15
   });
   assert.equal(rec.action, "ENTER");
   assert.equal(rec.side, "UP");

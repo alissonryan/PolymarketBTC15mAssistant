@@ -21,7 +21,12 @@ export function computeEdge({ modelUp, modelDown, marketYes, marketNo }) {
 }
 
 const CHOP_RANGE_THRESHOLD  = Number(process.env.RISK_CHOP_THRESHOLD  ?? 61.8);
-const BB_WIDTH_MIN_PCT       = Number(process.env.RISK_BB_WIDTH_MIN    ?? 1.0);
+const BB_WIDTH_MIN_PCT       = Number(process.env.RISK_BB_WIDTH_MIN    ?? 0.08);
+const MAX_EDGE               = Number(process.env.RISK_MAX_EDGE         ?? 0.35);
+// Block hours (UTC) where model historically underperforms due to lagging indicators
+// chasing momentum reversals at European session open
+const BLOCK_HOURS_UTC        = (process.env.RISK_BLOCK_HOURS_UTC ?? "7,8,9,10")
+  .split(",").map(Number).filter(Number.isFinite);
 
 export function decide({
   remainingMinutes,
@@ -51,6 +56,12 @@ export function decide({
   // Bollinger Band Width gate — compressed market filter
   if (bbWidthPct !== null && Number.isFinite(bbWidthPct) && bbWidthPct < BB_WIDTH_MIN_PCT) {
     return { action: "NO_TRADE", side: null, phase, reason: `bb_width_${bbWidthPct.toFixed(2)}pct_below_${BB_WIDTH_MIN_PCT}` };
+  }
+
+  // Trading hours gate — block UTC hours where lagging indicators chase reversals
+  const utcHour = new Date().getUTCHours();
+  if (BLOCK_HOURS_UTC.includes(utcHour)) {
+    return { action: "NO_TRADE", side: null, phase, reason: `blocked_hour_${utcHour}h_utc` };
   }
 
   if (regime === "CHOP" || regime === "RANGE") {
@@ -84,6 +95,12 @@ export function decide({
 
   if (bestEdge < threshold) {
     return { action: "NO_TRADE", side: null, phase, reason: `edge_below_${threshold}` };
+  }
+
+  // Max edge cap — very high edge means all lagging indicators aligned AFTER the move;
+  // historically 35%+ WR in this zone (model chasing, market already priced the move)
+  if (bestEdge > MAX_EDGE) {
+    return { action: "NO_TRADE", side: null, phase, reason: `edge_${bestEdge.toFixed(3)}_above_max_${MAX_EDGE}` };
   }
 
   if (bestModel !== null && bestModel < minProb) {
