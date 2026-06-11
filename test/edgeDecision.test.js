@@ -16,47 +16,47 @@ test("decide blocks expired markets", () => {
   assert.deepEqual(rec, { action: "NO_TRADE", side: null, phase: "EXPIRED", reason: "market_expired" });
 });
 
-test("decide blocks DOWN bet when macroTrend is UP", () => {
+// Macro trend gate removed — calibrated model already incorporates macro as input dimension.
+// These tests verify that macroTrend is accepted but no longer blocks trades.
+test("decide allows DOWN bet even when macroTrend is UP (calibrated model)", () => {
   const rec = decide({
     remainingMinutes: 4,
     edgeUp: 0.1,
-    edgeDown: 0.35,
-    modelUp: 0.4,
-    modelDown: 0.75,
+    edgeDown: 0.15,
+    modelUp: 0.44,
+    modelDown: 0.63,
     regime: "TREND_DOWN",
     macroTrend: "UP"
   });
-
-  assert.equal(rec.action, "NO_TRADE");
-  assert.equal(rec.reason, "macro_trend_up_blocks_down");
+  // With calibrated model, macro gate is gone — DOWN edge should be evaluated on its own merit
+  assert.ok(rec.action === "ENTER" || rec.action === "NO_TRADE"); // either is valid, gate is gone
+  assert.ok(rec.reason !== "macro_trend_up_blocks_down");
 });
 
-test("decide blocks UP bet when macroTrend is DOWN", () => {
+test("decide allows UP bet even when macroTrend is DOWN (calibrated model)", () => {
   const rec = decide({
     remainingMinutes: 4,
-    edgeUp: 0.35,
+    edgeUp: 0.15,
     edgeDown: 0.1,
-    modelUp: 0.75,
-    modelDown: 0.4,
+    modelUp: 0.63,
+    modelDown: 0.44,
     regime: "TREND_UP",
     macroTrend: "DOWN"
   });
-
-  assert.equal(rec.action, "NO_TRADE");
-  assert.equal(rec.reason, "macro_trend_down_blocks_up");
+  assert.ok(rec.action === "ENTER" || rec.action === "NO_TRADE");
+  assert.ok(rec.reason !== "macro_trend_down_blocks_up");
 });
 
-test("decide allows aligned bet when macroTrend matches side", () => {
+test("decide enters trade when edge and model prob are sufficient", () => {
   const rec = decide({
     remainingMinutes: 4,
-    edgeUp: 0.35,
-    edgeDown: 0.1,
-    modelUp: 0.75,
-    modelDown: 0.4,
+    edgeUp: 0.15,
+    edgeDown: 0.05,
+    modelUp: 0.63,
+    modelDown: 0.37,
     regime: "TREND_UP",
     macroTrend: "UP"
   });
-
   assert.equal(rec.action, "ENTER");
   assert.equal(rec.side, "UP");
 });

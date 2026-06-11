@@ -26,8 +26,22 @@ import { fileURLToPath } from "url";
 import path from "path";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const CALIBRATION_PATH = path.join(__dirname, "../../scripts/calibration.json");
 
+// The calibration table must match the market horizon: calibration.json holds
+// 5-minute-ahead base rates; calibration_15m.json (CALIB_HORIZON=3) holds
+// 15-minute-ahead rates. Pick by CANDLE_WINDOW_MINUTES unless CALIBRATION_PATH
+// overrides explicitly.
+function resolveCalibrationPath() {
+  if (process.env.CALIBRATION_PATH) return path.resolve(process.env.CALIBRATION_PATH);
+  const windowMin = Number(process.env.CANDLE_WINDOW_MINUTES) || 15;
+  const file = windowMin === 5 ? "calibration.json" : `calibration_${windowMin}m.json`;
+  return path.join(__dirname, "../../scripts", file);
+}
+
+const CALIBRATION_PATH = resolveCalibrationPath();
+
+// With 288 buckets, ~14 pass the |edge|>ci95 test by pure chance; n >= 100 keeps
+// the false-positive dilution acceptable. Do not lower this to get more trades.
 const MIN_N = 100;
 
 // ---------------------------------------------------------------------------

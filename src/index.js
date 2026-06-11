@@ -20,7 +20,7 @@ import { computeRsi, computeRsiSeries, sma, slopeLast } from "./indicators/rsi.j
 import { computeMacd } from "./indicators/macd.js";
 import { computeHeikenAshi, countConsecutive } from "./indicators/heikenAshi.js";
 import { detectRegime } from "./engines/regime.js";
-import { applyTimeAwareness } from "./engines/probability.js";
+import { settlementProbability, estimateSigmaPerSqrtMin } from "./engines/settlementProb.js";
 import { lookupRate, isCalibrationLoaded } from "./engines/calibratedRate.js";
 import { computeEdge, decide } from "./engines/edge.js";
 import { appendCsvRow, formatNumber, formatPct, getCandleWindowTiming, sleep } from "./utils.js";
@@ -538,7 +538,18 @@ async function main() {
         ? lookupRate({ hour: utcHour, macro: macroInfo.trend, priceVsVwap, rsiZone })
         : { upRate: 0.5, downRate: 0.5, edge: 0, hasEdge: false, found: false, n: 0 };
 
-      const timeAware = applyTimeAwareness(calibrated.upRate, timeLeftMin, CONFIG.candleWindowMinutes);
+      // Settlement probability: drifted-diffusion model that combines the calibrated
+      // base rate (drift) with displacement vs priceToBeat and realized vol. Converges
+      // to 0/1 as time runs out — same as the market — instead of shrinking to 0.5.
+      const sigmaPerSqrtMin = estimateSigmaPerSqrtMin(klines1m);
+      const timeAware = settlementProbability({
+        spot: currentPrice ?? spotPrice,
+        strike: priceToBeat,
+        remainingMinutes: timeLeftMin,
+        windowMinutes: CONFIG.candleWindowMinutes,
+        sigmaPerSqrtMin,
+        baseUpRate: calibrated.upRate
+      });
 
       const edge = computeEdge({ modelUp: timeAware.adjustedUp, modelDown: timeAware.adjustedDown, marketYes: marketUp, marketNo: marketDown });
 

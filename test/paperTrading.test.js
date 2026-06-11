@@ -95,3 +95,34 @@ test("paper lock recovers stale lock files from dead pids", async () => {
     rmSync(dir, { recursive: true, force: true });
   }
 });
+
+test("same-side cooldown blocks immediate re-entry on the same side", async () => {
+  const { mod, cleanup } = await loadPaper("cool_");
+  try {
+    process.env.RISK_SAME_SIDE_REENTRY_MIN = "30";
+    const rec = { action: "ENTER", side: "UP", edge: 0.2, phase: "EARLY" };
+    const mkPoly = (slug) => ({
+      ok: true,
+      market: { slug },
+      tokens: { upTokenId: "up", downTokenId: "down" },
+      prices: { up: 0.52, down: 0.51 },
+      referencePrice: 100
+    });
+
+    const first = mod.onPaperTick({ rec, poly: mkPoly("btc-updown-15m-a"), spotPrice: 100, referencePrice: 100, timeLeftMin: 14 });
+    assert.equal(first.mode, "entered");
+
+    // Novo slug liquida a posição; mesma direção logo em seguida deve ser bloqueada
+    const second = mod.onPaperTick({ rec, poly: mkPoly("btc-updown-15m-b"), spotPrice: 100, referencePrice: 100, timeLeftMin: 14 });
+    assert.equal(second.mode, "blocked");
+    assert.match(second.reason, /cooldown/);
+
+    // Lado oposto não é afetado pelo cooldown do lado UP
+    const recDown = { action: "ENTER", side: "DOWN", edge: 0.2, phase: "EARLY" };
+    const third = mod.onPaperTick({ rec: recDown, poly: mkPoly("btc-updown-15m-b"), spotPrice: 100, referencePrice: 100, timeLeftMin: 14 });
+    assert.equal(third.mode, "entered");
+  } finally {
+    delete process.env.RISK_SAME_SIDE_REENTRY_MIN;
+    cleanup();
+  }
+});

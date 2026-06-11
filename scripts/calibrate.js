@@ -28,7 +28,15 @@ import path from "path";
 // ---------------------------------------------------------------------------
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const CACHE_DIR = path.join(__dirname, "cache");
-const OUT_PATH = path.join(__dirname, "calibration.json");
+
+// Prediction horizon in 5m candles: 1 = next 5m close (5m markets),
+// 3 = close 15 minutes ahead (15m markets). Out-of-sample validation shows the
+// conditional edge is STRONGER at the 15m horizon (55.5% vs 53.7% OOS accuracy).
+const HORIZON = Number(process.env.CALIB_HORIZON ?? 1);
+const OUT_PATH = path.join(
+  __dirname,
+  HORIZON === 1 ? "calibration.json" : `calibration_${HORIZON * 5}m.json`,
+);
 
 // ---------------------------------------------------------------------------
 // Kline helpers — parse a raw Binance kline array into a plain object
@@ -253,12 +261,12 @@ function accum(key, isUp) {
   if (isUp) entry.upsN++;
 }
 
-// We iterate up to candles5m.length - 1 because we need the NEXT candle's close for actualUp
+// We iterate up to candles5m.length - HORIZON because we need the close HORIZON candles ahead
 let skipped = 0;
 
-for (let i = 0; i < candles5m.length - 1; i++) {
+for (let i = 0; i < candles5m.length - HORIZON; i++) {
   const c = candles5m[i];
-  const nextClose = candles5m[i + 1].close;
+  const nextClose = candles5m[i + HORIZON].close;
 
   // Update rolling buffers
   closeBuffer.push(c.close);

@@ -9,7 +9,7 @@ import { computeMacd } from "./indicators/macd.js";
 import { computeHeikenAshi, countConsecutive } from "./indicators/heikenAshi.js";
 import { CVDAnalyzer } from "./indicators/cvd.js";
 import { detectRegime } from "./engines/regime.js";
-import { applyTimeAwareness } from "./engines/probability.js";
+import { settlementProbability, estimateSigmaPerSqrtMin } from "./engines/settlementProb.js";
 import { lookupRate } from "./engines/calibratedRate.js";
 import { computeEdge, decide } from "./engines/edge.js";
 import { TimePriceConvergence } from "./engines/timePriceField.js";
@@ -220,7 +220,16 @@ async function main() {
         ? lookupRate({ hour: utcHour, macro: macroInfo.trend, priceVsVwap, rsiZone })
         : { upRate: 0.5, downRate: 0.5, edge: 0, hasEdge: false, found: false, n: 0 };
 
-      const timeAware = applyTimeAwareness(calibrated.upRate, timeLeftMin0, WINDOW_MIN);
+      // Drifted-diffusion settlement probability (see src/engines/settlementProb.js)
+      const sigmaPerSqrtMin = estimateSigmaPerSqrtMin(klines1m);
+      const timeAware = settlementProbability({
+        spot: spotPrice ?? lastPrice,
+        strike: priceToBeat,
+        remainingMinutes: timeLeftMin0,
+        windowMinutes: WINDOW_MIN,
+        sigmaPerSqrtMin,
+        baseUpRate: calibrated.upRate
+      });
       const edge = computeEdge({
         modelUp: timeAware.adjustedUp, modelDown: timeAware.adjustedDown,
         marketYes, marketNo

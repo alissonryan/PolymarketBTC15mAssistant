@@ -14,6 +14,31 @@ let _lockFd = null;
 let _paperPtbSlug = null;
 let _paperPtbPrice = null;
 
+// ─── cooldown anti-correlação ────────────────────────────────────────────────
+// Entradas no mesmo lado em janelas consecutivas são a MESMA aposta repetida
+// (mesmas condições de mercado), não amostras independentes — o histórico mostra
+// 14 trades UP seguidos perdendo juntos. Cooldown entre entradas do mesmo lado,
+// mais um cooldown maior após perda no mesmo lado.
+let _lastEntryAtBySide = { UP: 0, DOWN: 0 };
+let _lastLossAtBySide = { UP: 0, DOWN: 0 };
+
+function sameSideCooldownCheck(side, nowMs = Date.now()) {
+  const reentryMin = Number(process.env.RISK_SAME_SIDE_REENTRY_MIN ?? 30);
+  const lossCooldownMin = Number(process.env.RISK_LOSS_COOLDOWN_MIN ?? 60);
+
+  const sinceEntryMin = (nowMs - (_lastEntryAtBySide[side] ?? 0)) / 60_000;
+  if (reentryMin > 0 && sinceEntryMin < reentryMin) {
+    return { allowed: false, reason: `cooldown_same_side_${Math.ceil(reentryMin - sinceEntryMin)}min` };
+  }
+
+  const sinceLossMin = (nowMs - (_lastLossAtBySide[side] ?? 0)) / 60_000;
+  if (lossCooldownMin > 0 && sinceLossMin < lossCooldownMin) {
+    return { allowed: false, reason: `cooldown_after_loss_${Math.ceil(lossCooldownMin - sinceLossMin)}min` };
+  }
+
+  return { allowed: true };
+}
+
 const EMPTY_POSITION = {
   open: false,
   side: null,
@@ -172,6 +197,12 @@ export function onPaperTick({ rec, poly, spotPrice, referencePrice = null, settl
       return { mode: "blocked", reason: risk.reason };
     }
 
+    const cooldown = sameSideCooldownCheck(rec.side);
+    if (!cooldown.allowed) {
+      return { mode: "blocked", reason: cooldown.reason };
+    }
+    _lastEntryAtBySide[rec.side] = Date.now();
+
     _pos = {
       open: true,
       side: rec.side,
@@ -205,6 +236,9 @@ export function onPaperTick({ rec, poly, spotPrice, referencePrice = null, settl
 
 function _settlePosition(settlementChainlinkPrice) {
   const won = _determineWinner(_pos.side, _pos.priceToBeat, settlementChainlinkPrice);
+  if (!won && (_pos.side === "UP" || _pos.side === "DOWN")) {
+    _lastLossAtBySide[_pos.side] = Date.now();
+  }
   const grossPnl = calcPnl(_pos.usdcAmount, _pos.entryPrice, won);
   const pnl = parseFloat((grossPnl - (_pos.feeAtEntry ?? 0)).toFixed(4));
 
