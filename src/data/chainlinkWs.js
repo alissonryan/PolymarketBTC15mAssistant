@@ -46,6 +46,11 @@ export function startChainlinkPriceStream({
 
   let lastPrice = null;
   let lastUpdatedAt = null;
+  let lastReceivedAt = null;
+
+  // Half-open RPC connections freeze getLast() on the last answer forever; see
+  // polymarketLiveWs.js. Same watchdog + freshness cutoff here.
+  const STALE_MS = Number(process.env.ORACLE_STALE_MS ?? 120_000);
 
   let nextId = 1;
   let subId = null;
@@ -126,6 +131,7 @@ export function startChainlinkPriceStream({
 
         lastPrice = Number.isFinite(price) ? price : lastPrice;
         lastUpdatedAt = updatedAt ? updatedAt * 1000 : lastUpdatedAt;
+        lastReceivedAt = Date.now();
 
         if (typeof onUpdate === "function") {
           onUpdate({ price: lastPrice, updatedAt: lastUpdatedAt, source: "chainlink_ws" });
@@ -141,12 +147,32 @@ export function startChainlinkPriceStream({
 
   connect();
 
+  const watchdog = setInterval(() => {
+    if (closed) return;
+    if (ws && lastReceivedAt !== null && Date.now() - lastReceivedAt > STALE_MS) {
+      try {
+        ws.terminate();
+      } catch {
+        // ignore — close/error handler schedules the reconnect
+      }
+    }
+  }, 30_000);
+  watchdog.unref?.();
+
   return {
     getLast() {
-      return { price: lastPrice, updatedAt: lastUpdatedAt, source: "chainlink_ws" };
+      const stale = lastReceivedAt === null || Date.now() - lastReceivedAt > STALE_MS;
+      return {
+        price: stale ? null : lastPrice,
+        updatedAt: lastUpdatedAt,
+        receivedAt: lastReceivedAt,
+        stale,
+        source: "chainlink_ws"
+      };
     },
     close() {
       closed = true;
+      clearInterval(watchdog);
       try {
         if (ws && subId) {
           ws.send(JSON.stringify({ jsonrpc: "2.0", id: nextId++, method: "eth_unsubscribe", params: [subId] }));

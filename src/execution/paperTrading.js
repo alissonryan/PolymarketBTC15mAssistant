@@ -235,6 +235,23 @@ export function onPaperTick({ rec, poly, spotPrice, referencePrice = null, settl
 }
 
 function _settlePosition(settlementChainlinkPrice) {
+  // Settlement EXACTLY equal to the strike over a full window never happens with a
+  // live oracle — it means the price feed froze (strike and settlement read the same
+  // stale tick). Void the trade instead of recording a guaranteed loss for both sides.
+  if (
+    _pos.priceToBeat !== null &&
+    settlementChainlinkPrice !== null &&
+    Number(settlementChainlinkPrice) === Number(_pos.priceToBeat)
+  ) {
+    console.warn(
+      `[paper] ⚠ VOID | ${_pos.side} @ ${_pos.entryPrice} | settlement == strike ` +
+      `(${Number(_pos.priceToBeat).toFixed(2)}) — oracle congelado, trade anulado`
+    );
+    _pos = { ...EMPTY_POSITION };
+    savePos();
+    return;
+  }
+
   const won = _determineWinner(_pos.side, _pos.priceToBeat, settlementChainlinkPrice);
   if (!won && (_pos.side === "UP" || _pos.side === "DOWN")) {
     _lastLossAtBySide[_pos.side] = Date.now();

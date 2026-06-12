@@ -126,3 +126,30 @@ test("same-side cooldown blocks immediate re-entry on the same side", async () =
     cleanup();
   }
 });
+
+test("settlement equal to strike voids the trade instead of recording a loss", async () => {
+  const { mod, cleanup } = await loadPaper("void_");
+  try {
+    const rec = { action: "ENTER", side: "UP", edge: 0.2, phase: "EARLY" };
+    const mkPoly = (slug) => ({
+      ok: true,
+      market: { slug },
+      tokens: { upTokenId: "up", downTokenId: "down" },
+      prices: { up: 0.52, down: 0.51 },
+      referencePrice: 100
+    });
+
+    const first = mod.onPaperTick({ rec, poly: mkPoly("btc-updown-15m-a"), spotPrice: 100, referencePrice: 100, settlementPrice: 100, timeLeftMin: 14 });
+    assert.equal(first.mode, "entered");
+
+    // Novo slug com settlement EXATAMENTE igual ao strike (oracle congelado) → VOID
+    const noTrade = { action: "NO_TRADE", side: null, phase: "EARLY", reason: "x" };
+    mod.onPaperTick({ rec: noTrade, poly: mkPoly("btc-updown-15m-b"), spotPrice: 100, referencePrice: 100, settlementPrice: 100, timeLeftMin: 14 });
+
+    const stats = mod.getPaperStats();
+    assert.equal(stats.totalTrades, 0); // nada gravado
+    assert.equal(mod.hasPaperPosition(), false); // posição fechada
+  } finally {
+    cleanup();
+  }
+});

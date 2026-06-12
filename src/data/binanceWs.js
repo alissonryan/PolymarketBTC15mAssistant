@@ -20,6 +20,10 @@ export function startBinanceTradeStream({ symbol = CONFIG.symbol, onUpdate } = {
   let lastTs = null;
   let lastTrade = null;
 
+  // BTC trades print many times per second on Binance; silence past the cutoff
+  // means a dead/half-open socket, not a quiet market. See polymarketLiveWs.js.
+  const STALE_MS = Number(process.env.ORACLE_STALE_MS ?? 120_000);
+
   const connect = () => {
     if (closed) return;
 
@@ -63,12 +67,28 @@ export function startBinanceTradeStream({ symbol = CONFIG.symbol, onUpdate } = {
 
   connect();
 
+  const watchdog = setInterval(() => {
+    if (closed) return;
+    if (ws && lastTs !== null && Date.now() - lastTs > STALE_MS) {
+      try {
+        ws.terminate();
+      } catch {
+        // ignore — close/error handler schedules the reconnect
+      }
+    }
+  }, 30_000);
+  watchdog.unref?.();
+
   return {
     getLast() {
+      if (lastTs === null || Date.now() - lastTs > STALE_MS) {
+        return { price: null, ts: lastTs, stale: true };
+      }
       return lastTrade ?? { price: lastPrice, ts: lastTs };
     },
     close() {
       closed = true;
+      clearInterval(watchdog);
       try {
         ws?.close();
       } catch {

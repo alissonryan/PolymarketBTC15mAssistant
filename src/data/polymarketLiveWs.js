@@ -42,6 +42,12 @@ export function startPolymarketChainlinkPriceStream({
 
   let lastPrice = null;
   let lastUpdatedAt = null;
+  let lastReceivedAt = null;
+
+  // A half-open connection (server stops sending, no close event) would otherwise
+  // freeze getLast() on the last price forever — which silently corrupts the strike,
+  // the settlement AND the model spot. Watchdog + freshness cutoff prevent that.
+  const STALE_MS = Number(process.env.ORACLE_STALE_MS ?? 120_000);
 
   const connect = () => {
     if (closed) return;
@@ -100,6 +106,7 @@ export function startPolymarketChainlinkPriceStream({
 
       lastPrice = price;
       lastUpdatedAt = updatedAtMs ?? lastUpdatedAt;
+      lastReceivedAt = Date.now();
 
       if (typeof onUpdate === "function") {
         onUpdate({ price: lastPrice, updatedAt: lastUpdatedAt, source: "polymarket_ws" });
@@ -112,12 +119,33 @@ export function startPolymarketChainlinkPriceStream({
 
   connect();
 
+  // Watchdog: if the socket is open but silent past STALE_MS, force a reconnect.
+  const watchdog = setInterval(() => {
+    if (closed) return;
+    if (ws && lastReceivedAt !== null && Date.now() - lastReceivedAt > STALE_MS) {
+      try {
+        ws.terminate();
+      } catch {
+        // ignore — close/error handler schedules the reconnect
+      }
+    }
+  }, 30_000);
+  watchdog.unref?.();
+
   return {
     getLast() {
-      return { price: lastPrice, updatedAt: lastUpdatedAt, source: "polymarket_ws" };
+      const stale = lastReceivedAt === null || Date.now() - lastReceivedAt > STALE_MS;
+      return {
+        price: stale ? null : lastPrice,
+        updatedAt: lastUpdatedAt,
+        receivedAt: lastReceivedAt,
+        stale,
+        source: "polymarket_ws"
+      };
     },
     close() {
       closed = true;
+      clearInterval(watchdog);
       try {
         ws?.close();
       } catch {
