@@ -79,6 +79,19 @@ async function main() {
     process.once("exit", releasePaperLock);
   }
 
+  // Memory safety net (see index.js for rationale) — exits cleanly for a restart
+  // loop before V8's hard limit aborts the process.
+  const MEM_SOFT_CAP_MB = Number(process.env.MEM_SOFT_CAP_MB ?? 1200);
+  const memMonitor = setInterval(() => {
+    const rssMb = process.memoryUsage().rss / 1048576;
+    if (rssMb > MEM_SOFT_CAP_MB) {
+      console.error(`[mem] RSS ${rssMb.toFixed(0)}MB > soft cap ${MEM_SOFT_CAP_MB}MB — saindo para restart limpo`);
+      try { releasePaperLock(); } catch { /* ignore */ }
+      process.exit(17);
+    }
+  }, 60_000);
+  memMonitor.unref?.();
+
   let priceToBeatState = { ticker: null, value: null };
   const validationHeader = [
     "timestamp",

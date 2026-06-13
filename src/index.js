@@ -356,6 +356,22 @@ async function main() {
     process.once("exit", releasePaperLock);
   }
 
+  // Memory safety net: if RSS ever climbs past the soft cap, exit cleanly with a
+  // non-zero code BEFORE V8 hits its hard limit and aborts. Under a restart loop
+  // (see README) this recovers gracefully; standalone it at least logs the cause
+  // instead of a cryptic mark-compact crash. The perMessageDeflate fix should keep
+  // this from ever firing — it's diagnostics + defense in depth.
+  const MEM_SOFT_CAP_MB = Number(process.env.MEM_SOFT_CAP_MB ?? 1200);
+  const memMonitor = setInterval(() => {
+    const rssMb = process.memoryUsage().rss / 1048576;
+    if (rssMb > MEM_SOFT_CAP_MB) {
+      console.error(`[mem] RSS ${rssMb.toFixed(0)}MB > soft cap ${MEM_SOFT_CAP_MB}MB — saindo para restart limpo`);
+      try { releasePaperLock(); } catch { /* ignore */ }
+      process.exit(17);
+    }
+  }, 60_000);
+  memMonitor.unref?.();
+
   let prevSpotPrice = null;
   let prevCurrentPrice = null;
   let priceToBeatState = { slug: null, value: null, setAtMs: null };

@@ -54,7 +54,8 @@ export function startPolymarketChainlinkPriceStream({
 
     ws = new WebSocket(wsUrl, {
       handshakeTimeout: 10_000,
-      agent: wsAgentForUrl(wsUrl)
+      agent: wsAgentForUrl(wsUrl),
+      perMessageDeflate: false
     });
 
     const scheduleReconnect = () => {

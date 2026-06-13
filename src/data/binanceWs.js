@@ -28,7 +28,10 @@ export function startBinanceTradeStream({ symbol = CONFIG.symbol, onUpdate } = {
     if (closed) return;
 
     const url = buildWsUrl(symbol);
-    ws = new WebSocket(url, { agent: wsAgentForUrl(url) });
+    // perMessageDeflate:false is critical here — the Binance @trade stream fires
+    // hundreds of msgs/sec, and ws's default deflate allocates zlib contexts that
+    // fragment the heap into GB over a few hours (the OOM we hit at ~5h).
+    ws = new WebSocket(url, { agent: wsAgentForUrl(url), perMessageDeflate: false });
 
     ws.on("open", () => {
       reconnectMs = 500;

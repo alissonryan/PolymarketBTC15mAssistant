@@ -49,8 +49,11 @@ export function startChainlinkPriceStream({
   let lastReceivedAt = null;
 
   // Half-open RPC connections freeze getLast() on the last answer forever; see
-  // polymarketLiveWs.js. Same watchdog + freshness cutoff here.
-  const STALE_MS = Number(process.env.ORACLE_STALE_MS ?? 120_000);
+  // polymarketLiveWs.js. NOTE: Chainlink AnswerUpdated events are sparse by design
+  // (the on-chain feed only emits past a deviation threshold or heartbeat — often
+  // several minutes apart in calm markets), so the cutoff must be MUCH longer than
+  // the trade-stream cutoff, or the watchdog reconnect-storms a healthy socket.
+  const STALE_MS = Number(process.env.CHAINLINK_STALE_MS ?? 900_000);
 
   let nextId = 1;
   let subId = null;
@@ -61,7 +64,7 @@ export function startChainlinkPriceStream({
     const url = wssUrls[urlIndex % wssUrls.length];
     urlIndex += 1;
 
-    ws = new WebSocket(url, { agent: wsAgentForUrl(url) });
+    ws = new WebSocket(url, { agent: wsAgentForUrl(url), perMessageDeflate: false });
 
     const send = (obj) => {
       try {

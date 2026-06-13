@@ -48,6 +48,21 @@ Opens a menu to choose market, mode, and paper prefix.
 | Kalshi ETH 15m | `npm run kalshi:eth` |
 | Kalshi SOL 15m | `npm run kalshi:sol` |
 
+### Unattended 24/7 (auto-restart)
+
+The bots are long-running. A built-in memory monitor exits with code 17 if RSS
+passes `MEM_SOFT_CAP_MB` (default 1200) so an external loop can recycle the
+process cleanly. Run any bot under a restart loop:
+
+```bash
+while true; do npm run polymarket:btc:15m; echo "restarting in 5s..."; sleep 5; done
+```
+
+The paper lock is released on exit, so the restart re-acquires it without a stale
+`rm`. Tune the cutoff with `MEM_SOFT_CAP_MB` and oracle freshness with
+`ORACLE_STALE_MS` (trade/price feeds, default 120000) / `CHAINLINK_STALE_MS`
+(sparse on-chain feed, default 900000).
+
 ### Clean-slate run (separate log prefix)
 
 Use `PAPER_LOG_PREFIX` to write to a fresh set of log files without affecting previous results:
