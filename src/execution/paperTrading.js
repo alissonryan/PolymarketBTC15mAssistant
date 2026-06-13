@@ -22,6 +22,10 @@ let _paperPtbPrice = null;
 let _lastEntryAtBySide = { UP: 0, DOWN: 0 };
 let _lastLossAtBySide = { UP: 0, DOWN: 0 };
 
+// Last settled price — used to detect a frozen feed printing the same price across
+// consecutive (different) markets. See _settlePosition.
+let _lastSettlementPrice = null;
+
 function sameSideCooldownCheck(side, nowMs = Date.now()) {
   const reentryMin = Number(process.env.RISK_SAME_SIDE_REENTRY_MIN ?? 30);
   const lossCooldownMin = Number(process.env.RISK_LOSS_COOLDOWN_MIN ?? 60);
@@ -235,22 +239,32 @@ export function onPaperTick({ rec, poly, spotPrice, referencePrice = null, settl
 }
 
 function _settlePosition(settlementChainlinkPrice) {
-  // Settlement EXACTLY equal to the strike over a full window never happens with a
-  // live oracle — it means the price feed froze (strike and settlement read the same
-  // stale tick). Void the trade instead of recording a guaranteed loss for both sides.
-  if (
+  // Frozen-oracle guards. Two shapes of a stale price feed, both fatal to results:
+  //  (a) settlement == strike: strike and settlement read the same dead tick.
+  //  (b) settlement == previous market's settlement: the feed printed the SAME
+  //      price across two different markets — impossible with a live oracle over
+  //      a full window (this is what poisoned 12/06 Kalshi: 22 markets all settled
+  //      at the identical 63503.62 spot). Void instead of recording phantom results.
+  const frozenVsStrike =
     _pos.priceToBeat !== null &&
     settlementChainlinkPrice !== null &&
-    Number(settlementChainlinkPrice) === Number(_pos.priceToBeat)
-  ) {
+    Number(settlementChainlinkPrice) === Number(_pos.priceToBeat);
+  const frozenVsPrev =
+    settlementChainlinkPrice !== null &&
+    _lastSettlementPrice !== null &&
+    Number(settlementChainlinkPrice) === Number(_lastSettlementPrice);
+
+  if (frozenVsStrike || frozenVsPrev) {
     console.warn(
-      `[paper] ⚠ VOID | ${_pos.side} @ ${_pos.entryPrice} | settlement == strike ` +
-      `(${Number(_pos.priceToBeat).toFixed(2)}) — oracle congelado, trade anulado`
+      `[paper] ⚠ VOID | ${_pos.side} @ ${_pos.entryPrice} | ` +
+      `settlement ${Number(settlementChainlinkPrice).toFixed(2)} ` +
+      `(${frozenVsStrike ? "== strike" : "== settlement anterior"}) — oracle congelado, trade anulado`
     );
     _pos = { ...EMPTY_POSITION };
     savePos();
     return;
   }
+  _lastSettlementPrice = settlementChainlinkPrice;
 
   const won = _determineWinner(_pos.side, _pos.priceToBeat, settlementChainlinkPrice);
   if (!won && (_pos.side === "UP" || _pos.side === "DOWN")) {

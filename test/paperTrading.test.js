@@ -153,3 +153,29 @@ test("settlement equal to strike voids the trade instead of recording a loss", a
     cleanup();
   }
 });
+
+test("settlement equal to previous market's settlement voids (frozen feed across markets)", async () => {
+  const { mod, cleanup } = await loadPaper("frz_");
+  try {
+    const rec = { action: "ENTER", side: "UP", edge: 0.2, phase: "EARLY" };
+    const mkPoly = (slug) => ({
+      ok: true, market: { slug }, tokens: { upTokenId: "up", downTokenId: "down" },
+      prices: { up: 0.52, down: 0.51 }, referencePrice: 100
+    });
+    const noTrade = { action: "NO_TRADE", side: null, phase: "EARLY", reason: "x" };
+
+    // 1ª posição entra (strike 100), liquida no slug B com settlement 105 (real, !=strike)
+    mod.onPaperTick({ rec, poly: mkPoly("m-a"), spotPrice: 100, referencePrice: 100, settlementPrice: 100, timeLeftMin: 14 });
+    mod.onPaperTick({ rec, poly: mkPoly("m-b"), spotPrice: 105, referencePrice: 105, settlementPrice: 105, timeLeftMin: 14 });
+    const after1 = mod.getPaperStats().totalTrades; // 1 trade real gravado
+
+    // Nova posição no slug B (strike 105) liquida no slug C com settlement 105 de novo → feed congelado → VOID
+    mod.onPaperTick({ rec: noTrade, poly: mkPoly("m-c"), spotPrice: 105, referencePrice: 105, settlementPrice: 105, timeLeftMin: 14 });
+    const after2 = mod.getPaperStats().totalTrades;
+
+    assert.equal(after1, 1);
+    assert.equal(after2, 1); // nada novo gravado — o segundo settlement repetido foi anulado
+  } finally {
+    cleanup();
+  }
+});
