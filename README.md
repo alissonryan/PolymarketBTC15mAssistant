@@ -48,20 +48,97 @@ Opens a menu to choose market, mode, and paper prefix.
 | Kalshi ETH 15m | `npm run kalshi:eth` |
 | Kalshi SOL 15m | `npm run kalshi:sol` |
 
-### Unattended 24/7 (auto-restart)
+## Running the three bots
 
-The bots are long-running. A built-in memory monitor exits with code 17 if RSS
-passes `MEM_SOFT_CAP_MB` (default 1200) so an external loop can recycle the
-process cleanly. Run any bot under a restart loop:
+Each bot renders a full-screen live dashboard, so **one bot per terminal tab**.
+The three normally run together: `polymarket:btc:5m`, `polymarket:btc:15m`, and
+`kalshi:btc`. Pick ONE of the two modes below — don't run both at once or the
+second instance of a bot collides on its paper lock.
+
+> All commands assume you're in the project directory:
+> ```bash
+> cd ~/code/PolymarketBTC15mAssistant
+> ```
+
+### Mode A — watch live (foreground, with auto-restart)
+
+Open **3 terminal tabs** (`Cmd+T`), one command per tab. The `while` loop keeps
+the dashboard visible AND relaunches the bot in 5s if it ever crashes:
 
 ```bash
-while true; do npm run polymarket:btc:15m; echo "restarting in 5s..."; sleep 5; done
+# Tab 1 — Polymarket 5m
+while true; do npm run polymarket:btc:5m;  echo "caiu, religando em 5s..."; sleep 5; done
+
+# Tab 2 — Polymarket 15m (stricter chop filter baked in)
+while true; do npm run polymarket:btc:15m; echo "caiu, religando em 5s..."; sleep 5; done
+
+# Tab 3 — Kalshi
+while true; do npm run kalshi:btc;         echo "caiu, religando em 5s..."; sleep 5; done
 ```
 
-The paper lock is released on exit, so the restart re-acquires it without a stale
-`rm`. Tune the cutoff with `MEM_SOFT_CAP_MB` and oracle freshness with
-`ORACLE_STALE_MS` (trade/price feeds, default 120000) / `CHAINLINK_STALE_MS`
-(sparse on-chain feed, default 900000).
+Stop a bot: `Ctrl+C` in its tab (press twice — once to kill the bot, the loop
+relaunches it, so Ctrl+C again to also break the loop). Closing the tab also
+stops that bot. The machine sleeping/shutting down stops all of them.
+
+### Mode B — run in background 24/7 (survives closing the terminal)
+
+Use `nohup` so the bots keep running after you close the terminal. Output goes to
+log files instead of the screen:
+
+```bash
+mkdir -p logs/run
+# clear any stale locks from a previous run first
+rm -f logs/poly_btc_5m_paper.lock logs/poly_btc_15m_paper.lock logs/kalshi_btc_paper.lock
+
+nohup bash -c 'while true; do npm run polymarket:btc:5m;  sleep 5; done' > logs/run/poly5m.out  2>&1 &
+nohup bash -c 'while true; do npm run polymarket:btc:15m; sleep 5; done' > logs/run/poly15m.out 2>&1 &
+nohup bash -c 'while true; do npm run kalshi:btc;         sleep 5; done' > logs/run/kalshi.out   2>&1 &
+```
+
+Watch a background bot's output live:
+
+```bash
+tail -f logs/run/poly15m.out   # Ctrl+C to stop watching (bot keeps running)
+```
+
+### Check what's running
+
+```bash
+pgrep -fl "src/index"          # lists the live bot processes (expect 3)
+cat logs/poly_btc_15m_paper.lock   # shows the pid holding each lock
+```
+
+### Stop everything
+
+```bash
+pkill -f "while true; do npm run"   # kills the restart loops (background mode)
+pkill -f "src/index"                # kills the bot processes
+```
+
+After stopping, the paper locks are released automatically. If a bot was killed
+hard and left a stale lock, remove it before restarting:
+
+```bash
+rm -f logs/poly_btc_5m_paper.lock logs/poly_btc_15m_paper.lock logs/kalshi_btc_paper.lock
+```
+
+### Tuning
+
+A built-in memory monitor exits with code 17 if RSS passes `MEM_SOFT_CAP_MB`
+(default 1200) so the restart loop recycles the process cleanly. Other knobs:
+
+| Env var | Default | Effect |
+|---------|---------|--------|
+| `MEM_SOFT_CAP_MB` | 1200 | RSS ceiling before a clean self-exit for restart |
+| `ORACLE_STALE_MS` | 120000 | Trade/price feed freshness cutoff (Binance/Polymarket WS) |
+| `CHAINLINK_STALE_MS` | 900000 | Sparse on-chain feed freshness cutoff |
+| `RISK_CHOP_THRESHOLD` | 61.8 (45 for 15m) | Block trades when CHOP exceeds this |
+
+Example — loosen the 15m chop filter for one run:
+
+```bash
+RISK_CHOP_THRESHOLD=50 npm run polymarket:btc:15m
+```
 
 ### Clean-slate run (separate log prefix)
 
