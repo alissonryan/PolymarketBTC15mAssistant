@@ -191,6 +191,9 @@ RISK_MAX_SPREAD=0.03
 
 # Risk gates (tunable)
 RISK_CHOP_THRESHOLD=61.8        # CHOP > this = ranging, no trade
+                                # NOTE: the 15m bot ships with a stricter 45 baked into
+                                # its npm script — it bleeds in chop, so it only trades
+                                # in trend/mild-neutral. Override with RISK_CHOP_THRESHOLD.
 RISK_BB_WIDTH_MIN=0.08          # BB Width < this = compressed, no trade (1m candle scale)
 RISK_MAX_EDGE=0.35              # Edge > this = model overconfident, no trade
 RISK_BLOCK_HOURS_UTC=7,8,9,10  # UTC hours to skip (European open reversal zone)

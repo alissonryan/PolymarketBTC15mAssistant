@@ -3,6 +3,10 @@ import test from "node:test";
 import { decide } from "../src/engines/edge.js";
 import { computeMacroTrend } from "../src/engines/macroTrend.js";
 
+// Disable the wall-clock UTC-hour gate so these tests are deterministic regardless
+// of when they run (decide() reads RISK_BLOCK_HOURS_UTC per-call).
+process.env.RISK_BLOCK_HOURS_UTC = "";
+
 test("decide blocks expired markets", () => {
   const rec = decide({
     remainingMinutes: -0.1,

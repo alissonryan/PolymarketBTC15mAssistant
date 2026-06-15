@@ -25,10 +25,15 @@ const EDGE_SAFETY_MARGIN     = Number(process.env.RISK_EDGE_MARGIN      ?? 0.02)
 const CHOP_RANGE_THRESHOLD  = Number(process.env.RISK_CHOP_THRESHOLD  ?? 61.8);
 const BB_WIDTH_MIN_PCT       = Number(process.env.RISK_BB_WIDTH_MIN    ?? 0.08);
 const MAX_EDGE               = Number(process.env.RISK_MAX_EDGE         ?? 0.35);
-// Block hours (UTC) where model historically underperforms due to lagging indicators
-// chasing momentum reversals at European session open
-const BLOCK_HOURS_UTC        = (process.env.RISK_BLOCK_HOURS_UTC ?? "7,8,9,10")
-  .split(",").map(Number).filter(Number.isFinite);
+
+// Block hours (UTC) where the model historically underperforms (lagging indicators
+// chasing reversals at the European open). Read per-call so it stays runtime-
+// configurable and deterministic in tests (the old module-load const made the
+// suite fail whenever it ran during a blocked hour).
+function blockedHoursUtc() {
+  return (process.env.RISK_BLOCK_HOURS_UTC ?? "7,8,9,10")
+    .split(",").map(Number).filter(Number.isFinite);
+}
 
 export function decide({
   remainingMinutes,
@@ -62,7 +67,7 @@ export function decide({
 
   // Trading hours gate — block UTC hours where lagging indicators chase reversals
   const utcHour = new Date().getUTCHours();
-  if (BLOCK_HOURS_UTC.includes(utcHour)) {
+  if (blockedHoursUtc().includes(utcHour)) {
     return { action: "NO_TRADE", side: null, phase, reason: `blocked_hour_${utcHour}h_utc` };
   }
 

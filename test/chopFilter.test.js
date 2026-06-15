@@ -3,6 +3,10 @@ import test from "node:test";
 import { computeChop, computeBBWidth } from "../src/indicators/chop.js";
 import { decide } from "../src/engines/edge.js";
 
+// Disable the wall-clock UTC-hour gate so these tests are deterministic regardless
+// of when they run (decide() reads RISK_BLOCK_HOURS_UTC per-call).
+process.env.RISK_BLOCK_HOURS_UTC = "";
+
 // ── computeChop ──────────────────────────────────────────────────────────────
 
 test("computeChop returns null for insufficient data", () => {
