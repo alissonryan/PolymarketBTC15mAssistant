@@ -6,7 +6,7 @@
 
 **Architecture:** A new `src/execution/paperStore.js` factory owns all persistence (schema, connection, read/write of trades/positions/voids). `paperTrading.js` keeps every trade-logic line and just delegates persistence to one store instance. Mode `json` (default) preserves today's behavior exactly; `dual` writes both JSON and SQLite while JSON stays canonical (read source); `sqlite` makes SQLite canonical. An importer backfills existing JSON into the DB and a comparison script proves zero divergence during the dual-write window.
 
-**Tech Stack:** Node v20.17.0 (ESM), `node --test`, `better-sqlite3` (synchronous native driver — `node:sqlite` is unavailable on Node 20).
+**Tech Stack:** Node **v24.11.0** (ESM), `node --test`, built-in **`node:sqlite`** (`DatabaseSync`). Decision changed from `better-sqlite3`: it has no prebuilt binary for macOS arm64 + Node 20 and fails to compile from source (broken Command Line Tools SDK — `'climits' file not found`). `node:sqlite` is built into Node 22.5+ (no flag on v24), needs no native build, and works the same on the Ubuntu VPS with zero build toolchain. It is still flagged "experimental" (prints an `ExperimentalWarning` to stderr), but the API surface used here (`DatabaseSync`, `prepare/run/get/all`, `exec`) is small and stable in practice.
 
 **Spec:** `docs/superpowers/specs/2026-06-16-sqlite-paper-trading-migration-design.md`
 
@@ -24,31 +24,59 @@
 
 `bot_id` is derived from `PAPER_LOG_PREFIX` by stripping the trailing `_` (e.g. `poly_btc_15m_` → `poly_btc_15m`). The lock file (`*_paper.lock`) stays file-based — out of scope.
 
+**Node version:** all `node`/`npm` commands in this plan must run on **Node v24.11.0** (`nvm use 24` first). The repo currently runs on Node 20; this migration moves it to Node 24 because `node:sqlite` requires it.
+
 ---
 
-### Task 1: Add better-sqlite3 dependency
+### Task 1: Pin Node 24 and verify node:sqlite
 
 **Files:**
-- Modify: `package.json`
+- Create: `.nvmrc`
+- Modify: `package.json` (add `engines`, suppress ExperimentalWarning in bot scripts)
 
-- [ ] **Step 1: Install the driver**
+- [ ] **Step 1: Pin the Node version**
 
-Run: `npm install better-sqlite3`
-Expected: `package.json` gains `"better-sqlite3"` under `dependencies`; install succeeds (prebuilt binary).
+Create `.nvmrc` with exactly:
+```
+v24.11.0
+```
 
-- [ ] **Step 2: Smoke-test the driver**
+Run: `nvm use` (from repo root)
+Expected: `Now using node v24.11.0`
+
+- [ ] **Step 2: Smoke-test the built-in driver**
 
 Run:
 ```bash
-node -e "import('better-sqlite3').then(m=>{const db=new m.default(':memory:');db.exec('CREATE TABLE t(x)');db.prepare('INSERT INTO t VALUES (?)').run(1);console.log('rows',db.prepare('SELECT count(*) c FROM t').get().c)})"
+node -e "const {DatabaseSync}=require('node:sqlite');const db=new DatabaseSync(':memory:');db.exec('PRAGMA journal_mode=WAL');db.exec('CREATE TABLE t(x)');db.prepare('INSERT INTO t VALUES (?)').run(1);console.log('rows',db.prepare('SELECT count(*) c FROM t').get().c)" 2>&1
 ```
-Expected: `rows 1`
+Expected: `rows 1` (an `ExperimentalWarning` line on stderr is fine).
 
-- [ ] **Step 3: Commit**
+- [ ] **Step 3: Declare the engine and silence the warning in bot scripts**
+
+In `package.json`, add a top-level `engines` block:
+```json
+  "engines": { "node": ">=24" },
+```
+
+Add `NODE_NO_WARNINGS=1` to the three bot scripts so the ExperimentalWarning doesn't spam the logs. Example for the 5m script (apply the same prefix to `polymarket:btc:15m` and `kalshi:btc`):
+```json
+    "polymarket:btc:5m": "NODE_NO_WARNINGS=1 CANDLE_WINDOW_MINUTES=5 EXECUTE_ORDERS=false PAPER_TRADING=true PAPER_LOG_PREFIX=${PAPER_LOG_PREFIX:-poly_btc_5m_} node --env-file=.env src/index.js",
+```
+
+- [ ] **Step 4: Verify core deps load on Node 24**
+
+Run:
+```bash
+node -e "Promise.all([import('ws'),import('ethers'),import('undici'),import('dotenv'),import('@polymarket/clob-client'),import('viem')]).then(()=>console.log('deps OK')).catch(e=>{console.error('FAIL',e.message);process.exit(1)})"
+```
+Expected: `deps OK`
+
+- [ ] **Step 5: Commit**
 
 ```bash
-git add package.json package-lock.json
-git commit -m "build: add better-sqlite3 for paper-trade persistence"
+git add .nvmrc package.json
+git commit -m "build: pin Node 24 for built-in node:sqlite; silence experimental warning"
 ```
 
 ---
@@ -159,7 +187,7 @@ Expected: FAIL — `Cannot find module '../src/execution/paperStore.js'`
 Create `src/execution/paperStore.js`:
 
 ```js
-import Database from "better-sqlite3";
+import { DatabaseSync } from "node:sqlite";
 import fs from "node:fs";
 import path from "node:path";
 
@@ -274,9 +302,10 @@ export function createPaperStore({
   function db() {
     if (_db) return _db;
     fs.mkdirSync(logsDir, { recursive: true });
-    _db = new Database(dbFile);
-    _db.pragma("journal_mode = WAL");
-    _db.pragma("busy_timeout = 5000");
+    _db = new DatabaseSync(dbFile);
+    // node:sqlite has no .pragma() helper — pragmas go through exec().
+    _db.exec("PRAGMA journal_mode = WAL");
+    _db.exec("PRAGMA busy_timeout = 5000");
     _db.exec(SCHEMA);
     return _db;
   }
@@ -692,6 +721,7 @@ Run: `chmod +x scripts/backup-db.sh`
 - [ ] **Step 2: Document deploy + cutover in README**
 
 Add a section to `README.md` documenting:
+- **Node 24 requirement:** the project now needs Node ≥24 (built-in `node:sqlite`). On the Ubuntu VPS: `nvm install 24 && nvm use 24` (no build toolchain needed). Restart bots on Node 24.
 - Store modes: `PAPER_STORE=json` (default) | `dual` | `sqlite`.
 - **Dual-write rollout:** restart the 3 bots with `PAPER_STORE=dual` (e.g. `PAPER_STORE=dual npm run polymarket:btc:5m`), after running `npm run import:sqlite` once to backfill history.
 - **Validate:** `npm run compare:stores` should print all ✅ and exit 0.

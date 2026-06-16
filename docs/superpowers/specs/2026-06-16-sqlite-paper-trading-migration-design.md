@@ -141,11 +141,19 @@ ver quantos foram anulados e por quê.
 (`PRAGMA journal_mode=WAL`) + **`PRAGMA busy_timeout`** (ex.: 5000ms). O volume é
 trivial (um INSERT a cada vários minutos por bot), então não há contenção real.
 
-### Biblioteca
+### Biblioteca — DECIDIDO: `node:sqlite` (Node 24)
 
-Usar `better-sqlite3` (síncrono, casa com o estilo síncrono atual de
-`writeFileSync`) ou o `node:sqlite` nativo se a versão do Node na VPS suportar.
-Decisão final fica para o plano de implementação (verificar versão do Node).
+Avaliado `better-sqlite3` primeiro, mas ele não tem binário prebuilt para macOS
+arm64 + Node 20 e falha ao compilar do fonte no laptop (Command Line Tools
+quebrado — `'climits' file not found`). Decisão: usar o **`node:sqlite` embutido**
+(`DatabaseSync`), rodando o projeto no **Node v24.11.0** (já instalado via nvm; sem
+flag, só um `ExperimentalWarning` inofensivo). Vantagens: zero compilação nativa,
+zero dependência de terceiros, e **funciona igual na VPS Ubuntu sem nenhum toolchain
+de build** (o `better-sqlite3` exigiria `build-essential`).
+
+Implicação: o runtime do projeto passa de Node 20 → **Node 24**. Os bots precisam de
+restart no Node 24 (a VPS instala via `nvm install 24`). A lógica de trade não muda —
+só o runtime e a camada de persistência.
 
 ## Importador
 
@@ -210,7 +218,8 @@ ausência de backup do histórico, que era um risco aberto independente desta mi
 | Bug silencioso corrompe o dataset de validação | Dual-write — JSON intacto como fallback durante a janela |
 | 3 processos escrevendo no mesmo `.db` | WAL mode + busy_timeout; volume trivial |
 | Perda de trades na janela entre import e restart | Importar imediatamente antes do restart, por bot |
-| Versão do Node na VPS sem `node:sqlite` | Decidir lib (`better-sqlite3`) no plano de implementação |
+| Node 20 → 24 pode quebrar deps do projeto | Smoke-test das deps no Node 24 (passou: ws/ethers/undici/dotenv/clob-client/viem) + validar bots subindo no 24 antes do cutover |
+| `node:sqlite` é experimental (pode mudar entre versões) | API usada é mínima e estável; `.nvmrc` fixa a versão (v24.11.0) p/ evitar drift |
 | `.db` sem backup | Cron de backup datado (item dedicado) |
 
 ## Não-objetivos (YAGNI)
