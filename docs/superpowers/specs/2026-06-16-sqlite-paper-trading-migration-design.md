@@ -191,11 +191,14 @@ Aguardar **o que vier por último** entre:
 - **(b) ≥20 trades liquidados** dual-written com zero divergência.
 
 Os 3 dias garantem cobrir condições variadas (restarts, voids, oracle congelado),
-não só volume bruto. Se a implementação acontecer nos próximos dias, a revisão do
-cutover cai por volta de **20–21/06/2026**.
+não só volume bruto.
 
-> Lembrete para retomar: após implementar (passos 1–4), marcar a data de início do
-> dual-write e revisar o cutover quando ambas as condições baterem.
+> **Dual-write iniciado: 2026-06-16 11:55 (-03)** no laptop, com os 3 bots em
+> `PAPER_STORE=dual`. Import backfillou 228 trades históricos (5m=99, 15m=55,
+> kalshi=74); `compare:stores` = tudo ✅. Revisão do cutover quando ambas as
+> condições baterem: **(a)** on/after **2026-06-19 ~12:00**, e **(b)** ≥20 trades
+> NOVOS liquidados desde o início, dual-written com zero divergência. Data realista
+> de revisão: **~2026-06-19/20**.
 
 ## Backup
 
