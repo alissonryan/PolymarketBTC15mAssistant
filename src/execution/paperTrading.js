@@ -2,10 +2,9 @@ import fs from "node:fs";
 import path from "node:path";
 import { canTrade } from "../risk/guard.js";
 import { estimateTakerFee } from "./paperMath.js";
+import { createPaperStore } from "./paperStore.js";
 
 const _prefix = process.env.PAPER_LOG_PREFIX || "";
-const POSITION_FILE = path.join(process.cwd(), "logs", `${_prefix}paper_position.json`);
-const HISTORY_FILE  = path.join(process.cwd(), "logs", `${_prefix}paper_trades.json`);
 const LOCK_FILE = path.join(process.cwd(), "logs", `${_prefix}paper.lock`);
 let _lockFd = null;
 
@@ -66,17 +65,7 @@ function ensureDir(file) {
   fs.mkdirSync(path.dirname(file), { recursive: true });
 }
 
-function loadJson(file, fallback) {
-  try {
-    if (fs.existsSync(file)) return JSON.parse(fs.readFileSync(file, "utf8"));
-  } catch { /* ignore */ }
-  return fallback;
-}
-
-function saveJson(file, data) {
-  ensureDir(file);
-  fs.writeFileSync(file, JSON.stringify(data, null, 2), "utf8");
-}
+const _store = createPaperStore(); // mode from PAPER_STORE env (default "json")
 
 export function acquirePaperLock() {
   if (_lockFd !== null) return { acquired: true, file: LOCK_FILE };
@@ -118,21 +107,9 @@ export function releasePaperLock() {
 
 // ─── estado em memória ───────────────────────────────────────────────────────
 
-let _pos = loadJson(POSITION_FILE, { ...EMPTY_POSITION });
+let _pos = _store.loadPosition() ?? { ...EMPTY_POSITION };
 
-function savePos() { saveJson(POSITION_FILE, _pos); }
-
-// ─── histórico ───────────────────────────────────────────────────────────────
-
-function loadHistory() {
-  return loadJson(HISTORY_FILE, { trades: [] });
-}
-
-function appendTrade(trade) {
-  const h = loadHistory();
-  h.trades.push(trade);
-  saveJson(HISTORY_FILE, h);
-}
+function savePos() { _store.savePosition(_pos); }
 
 // ─── cálculo de P&L ──────────────────────────────────────────────────────────
 
@@ -260,6 +237,15 @@ function _settlePosition(settlementChainlinkPrice) {
       `settlement ${Number(settlementChainlinkPrice).toFixed(2)} ` +
       `(${frozenVsStrike ? "== strike" : "== settlement anterior"}) — oracle congelado, trade anulado`
     );
+    _store.appendVoided({
+      side: _pos.side,
+      entryPrice: _pos.entryPrice,
+      priceToBeat: _pos.priceToBeat,
+      settlementPrice: settlementChainlinkPrice,
+      voidReason: frozenVsStrike ? "frozen_vs_strike" : "frozen_vs_prev",
+      enteredAt: _pos.enteredAt,
+      voidedAt: new Date().toISOString()
+    });
     _pos = { ...EMPTY_POSITION };
     savePos();
     return;
@@ -294,7 +280,7 @@ function _settlePosition(settlementChainlinkPrice) {
     settledAt:        new Date().toISOString()
   };
 
-  appendTrade(trade);
+  _store.appendTrade(trade);
 
   console.log(
     `[paper] ${won ? "✅ WIN" : "❌ LOSS"} | ${_pos.side} @ ${_pos.entryPrice} | ` +
@@ -316,7 +302,7 @@ function _determineWinner(side, priceToBeat, settlementPrice) {
 // ─── estatísticas ─────────────────────────────────────────────────────────────
 
 export function getPaperStats() {
-  const { trades } = loadHistory();
+  const { trades } = _store.loadHistory();
 
   if (trades.length === 0) {
     return {
@@ -346,6 +332,6 @@ export function getPaperStats() {
 }
 
 export function getLastTrades(n = 5) {
-  const { trades } = loadHistory();
+  const { trades } = _store.loadHistory();
   return trades.slice(-n);
 }
