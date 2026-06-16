@@ -9,3 +9,10 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 *.pem
+
+# external research datasets (large parquet, never commit)
+data/
+
+# hf-backtest generated artifacts (reproducible: re-run extract.py / kalshi-extract.mjs)
+scripts/hf-backtest/cache/
+scripts/hf-backtest/entries*.json
