@@ -152,6 +152,98 @@ PAPER_LOG_PREFIX=clean_kalshi_btc_ npm run kalshi:btc
 
 ---
 
+## Persistência: SQLite store & rollout
+
+Paper-trade history is migrating from per-bot JSON files to a shared SQLite store
+(`logs/trades.db`). The migration runs in three stages — JSON only → dual-write →
+SQLite canonical — so we can validate parity before flipping the switch.
+
+### Node 24 requirement
+
+The SQLite store uses the built-in `node:sqlite` module, so the project now needs
+**Node ≥ 24** (no native build toolchain, no `better-sqlite3`). There is a `.nvmrc`
+pinning `v24.11.0` — `nvm use` picks it up automatically.
+
+On the Ubuntu VPS:
+
+```bash
+nvm install 24 && nvm use 24   # or just `nvm use` (reads .nvmrc)
+node -v                        # expect v24.x
+```
+
+**Restart the three bots on Node 24** before enabling any SQLite store mode.
+
+### Store modes (`PAPER_STORE`)
+
+The `PAPER_STORE` env var selects where trades are written:
+
+| Mode | Behavior |
+|------|----------|
+| `json` (default) | Current behavior — JSON files only (`logs/<prefix>paper_trades.json`). |
+| `dual` | Writes to **both** JSON and SQLite. JSON stays canonical for reads — the safety mode during rollout. |
+| `sqlite` | SQLite `logs/trades.db` is canonical. |
+
+All three bots share one `logs/trades.db`, distinguished by a `bot_id` column
+derived from `PAPER_LOG_PREFIX` (so `poly_btc_5m_`, `poly_btc_15m_`, `kalshi_btc_`
+each map to their own `bot_id`).
+
+### Dual-write rollout procedure
+
+1. **One-time backfill** of existing history into the DB:
+
+   ```bash
+   npm run import:sqlite   # imports logs/*_paper_trades.json into logs/trades.db
+   ```
+
+2. **Restart the 3 bots with `PAPER_STORE=dual`** (on Node 24):
+
+   ```bash
+   PAPER_STORE=dual npm run polymarket:btc:5m
+   PAPER_STORE=dual npm run polymarket:btc:15m
+   PAPER_STORE=dual npm run kalshi:btc
+   ```
+
+3. **Validate parity:**
+
+   ```bash
+   npm run compare:stores   # should print all ✅ and exit 0 (JSON count == SQLite count per bot)
+   ```
+
+### Cutover criteria
+
+Per the design spec, wait for the **last** of:
+
+- (a) **3 days** of dual-write, AND
+- (b) **≥ 20 settled trades** with **zero divergence** between JSON and SQLite.
+
+Target review window: ~**2026-06-20/21**. Once both are met, restart the bots with
+`PAPER_STORE=sqlite` and **archive** the JSON files (move them aside — **do NOT
+delete**):
+
+```bash
+PAPER_STORE=sqlite npm run polymarket:btc:5m   # + 15m + kalshi:btc
+```
+
+### Backup
+
+`./scripts/backup-db.sh` makes a dated copy of `logs/trades.db` to
+`$HOME/paper-db-backups` (override the destination with `PAPER_DB_BACKUP_DIR`). It
+uses `sqlite3 .backup` for a safe online copy when `sqlite3` is on `PATH`, else
+falls back to `cp`.
+
+```bash
+./scripts/backup-db.sh                       # -> $HOME/paper-db-backups/trades-<stamp>.db
+PAPER_DB_BACKUP_DIR=/mnt/backups ./scripts/backup-db.sh
+```
+
+Suggested cron (laptop or VPS), every 30 minutes:
+
+```
+*/30 * * * * cd /path/to/PolymarketBTC15mAssistant && ./scripts/backup-db.sh >> $HOME/paper-db-backups/backup.log 2>&1
+```
+
+---
+
 ## Calibration Workflow
 
 The model reads pre-computed base rates from `scripts/calibration.json` (5m horizon) and `scripts/calibration_15m.json` (15m horizon). Both must exist before starting the bots — each bot auto-selects its table by `CANDLE_WINDOW_MINUTES` (the Kalshi 15m bots also use the 15m table).
