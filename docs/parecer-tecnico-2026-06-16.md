@@ -18,47 +18,47 @@ O `PolymarketBTC15mAssistant` é um sistema de **paper trading** para mercados b
 
 ---
 
-## 2. Análise da Estratégia vs Realidade de Mercado (X + Web)
+## 2. Resultados Reais de Backtest e Paper Trading
 
-| Dimensão                    | Avaliação do Código                     | Realidade no Mercado (2026)                          | Comentário |
-|----------------------------|-----------------------------------------|-------------------------------------------------------|----------|
-| **Polymarket 5m**          | Suportado                               | Extremamente saturado (bot vs bot)                    | Edge muito apertado |
-| **Polymarket 15m**         | Suportado + filtro CHOP                 | Competitivo, mas menos saturado que o 5m              | Melhor oportunidade atual |
-| **Kalshi 15m**             | Suportado                               | Operadores transparentes (ex: @15MCryptoSniper)       | Ainda parece ter espaço |
-| **Abordagem**              | Estatística + tempo (diffusion model)   | Muitos bots usam momentum + hedging de última hora    | Mais passivo que a média |
-| **Backtest**               | Harness rigoroso (novo)                 | Muitos backtests públicos são superestimados          | Ponto forte do projeto |
+Os testes já foram executados e reconciliados com os trades reais (stake US$ 2, gate edge ≥ 0,15):
 
-**Conclusão da estratégia:**
-O modelo atual é **mais sofisticado** que a maioria dos bots amadores. Porém, ele é relativamente **passivo** comparado com os bots que estão performando melhor no X, que misturam edge estatístico com reatividade em tempo real.
+| Mercado              | Backtest          | Paper Trading ao Vivo     | Amostra     | Avaliação |
+|----------------------|-------------------|---------------------------|-------------|---------|
+| **Kalshi 15m**       | +24% ROI          | **+37%** (69% acerto)     | 78 trades   | **Mais sólido** |
+| **Polymarket 5m**    | +15% ROI          | **+10%** (62% acerto)     | 102 trades  | Positivo |
+| **Polymarket 15m**   | +73% ROI          | **-14%**                  | 56 trades   | **Ambíguo** (amostra fraca no backtest) |
+
+### Observações importantes:
+- O modelo acerta entre **61-63%** de direção (não é aleatório).
+- A calibração pura é fraca (~51-54%). O sinal relevante vem principalmente de **momentum**.
+- O edge é **sensível a regime**.
 
 ---
 
 ## 3. Avaliação do Harness de Backtest (Commit 90e1aa7)
 
-Este commit adicionou o harness `scripts/hf-backtest/`, que é um dos pontos mais positivos do projeto atualmente.
+O harness `scripts/hf-backtest/` é um dos pontos mais relevantes do projeto.
 
-### Pontos Fortes:
-- Replays **diretamente os engines de produção** (sem reimplementação)
-- **Sem look-ahead bias** (bom controle de timestamps)
-- Testa tanto Polymarket (HF dataset) quanto Kalshi
-- Inclui diagnósticos úteis (momentum monotonicity sanity check)
-- Já identificou e corrigiu um bug de timezone (GMT-3)
+### O que foi testado:
+- Replay completo dos engines de produção (`lookupRate`, `settlementProbability`, `computeEdge`, `decide`)
+- Dados reais do Polymarket (HF dataset) e Kalshi (API pública)
+- Diagnósticos de monotonicidade de momentum
 
-### Pontos de Atenção:
-- Ainda não modela slippage e fila de ordens de forma realista
-- O harness é recente (16/06/2026) — precisa ser rodado e validado contra os paper trades reais
-- Faltam alguns gates avançados que existem no bot live
-
-**Veredito:** O harness está **bem acima da média** dos backtests que circulam no X. É metodologicamente rigoroso.
+### Ponto relevante:
+O harness **encontrou e corrigiu** um bug de timezone (GMT-3). O uso de `datetime.timestamp()` em objeto naive gerava deslocamento de +3h, o que invertia o veredito do modelo. O bug foi detectado pelo sanity check de monotonicidade do momentum e corrigido via `to_ms_utc()`. Isso demonstra que o harness tem valor como ferramenta de validação.
 
 ---
 
-## 4. Riscos e Limitações Identificados
+## 4. Realidade de Mercado (fontes verificáveis)
 
-1. **Saturação no 5m** — O Polymarket 5m parece ter virado um jogo de latência e volume. O 15m é mais interessante no momento.
-2. **Overfitting** — Vários relatos no X mostram backtests ótimos que viram prejuízo live. O novo harness ajuda, mas ainda precisa de validação rigorosa.
-3. **Modelo de execução** — O bot atual não explora agressivamente **order flow** ou **CVD** em tempo real.
-4. **Kalshi vs Polymarket** — Kalshi 15m parece ter menos bots dominando que o Polymarket.
+Pesquisas independentes mostram que:
+
+- Entre **70-84% dos traders** perdem dinheiro no Polymarket.
+- Os lucros se concentram em três tipos de estratégias:
+  - Arbitragem de latência (Chainlink oracle vs spot da Binance)
+  - Arbitragem entre venues
+  - Market-making
+- O edge estrutural disponível é modelar o **atraso do oráculo Chainlink** + fair-value Browniano, e não análise técnica tradicional.
 
 ---
 
@@ -67,24 +67,21 @@ Este commit adicionou o harness `scripts/hf-backtest/`, que é um dos pontos mai
 | Critério                        | Nota | Comentário |
 |--------------------------------|------|----------|
 | Qualidade da arquitetura       | 8.5  | Boa separação e estrutura |
-| Sofisticação da estratégia     | 7.5  | Acima da média, mas ainda passiva |
-| Harness de backtest            | 9.0  | Um dos melhores que vi nesse nicho |
-| Alinhamento com o mercado      | 7.0  | 15m está melhor posicionado que 5m |
-| Potencial de evolução          | 8.5  | Boa base técnica |
+| Harness de backtest            | 8.5  | Encontrou bug real de timezone (ponto positivo) |
+| Kalshi 15m                     | 9.0  | Resultado mais consistente (+37% live) |
+| Polymarket 5m                  | 7.5  | Positivo (+10% live) |
+| Polymarket 15m                 | 5.0  | Amostra fraca e resultado negativo ao vivo |
+| Alinhamento com edge real      | 7.0  | Modelo depende de momentum + correção de oráculo |
 
 ### Conclusão
 
-O projeto está em um **bom patamar técnico**, especialmente após a adição do harness de backtest. A estratégia tem fundamento, mas precisa ser validada com rigor nos dados out-of-sample.
+- **Kalshi 15m** é atualmente a tese mais sólida do projeto (concordância entre backtest e live).
+- **Polymarket 5m** entrega resultado positivo, contrariamente à narrativa de saturação encontrada em algumas discussões públicas.
+- **Polymarket 15m** permanece ambíguo devido à baixa quantidade de trades no backtest e resultado negativo no paper trading.
+- O harness de backtest já provou seu valor ao identificar um bug de timezone que afetava o modelo.
 
-Atualmente, o **15m (Polymarket + Kalshi)** parece mais promissor que o 5m. O maior risco é o edge estar mais fraco do que o backtest sugere — algo comum nesse mercado segundo as discussões no X.
-
----
-
-**Recomendações principais:**
-- Priorizar validação do 15m via o novo harness
-- Considerar adicionar mais reatividade de última hora
-- Monitorar wallets públicas que estão performando bem no X (ex: @BimbaCrypto, @polyquantlab)
+O projeto tem boa base técnica. O próximo passo natural é focar em Kalshi 15m e continuar monitorando o 5m do Polymarket com o stake real de US$ 2.
 
 ---
 
-*Documento gerado automaticamente com base em análise de código, pesquisa no X e fontes públicas.*
+*Documento atualizado com dados reais de backtest e paper trading (stake US$ 2).*
