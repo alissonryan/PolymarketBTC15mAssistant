@@ -5,6 +5,7 @@ import path from "node:path";
 import test from "node:test";
 import { createPaperStore } from "../src/execution/paperStore.js";
 import { importJsonToSqlite } from "../scripts/import-json-to-sqlite.js";
+import { compareStores } from "../scripts/compare-stores.js";
 import { mkdirSync, writeFileSync as wf } from "node:fs";
 
 function tradeFixture(overrides = {}) {
@@ -94,6 +95,35 @@ test("importer backfills JSON trades and is idempotent", () => {
     const store = createPaperStore({ cwd, prefix: "poly_btc_5m_", mode: "sqlite" });
     assert.equal(store.loadHistory().trades.length, 2);
     store.close();
+  } finally {
+    rmSync(cwd, { recursive: true, force: true });
+  }
+});
+
+test("compareStores reports match when JSON and SQLite agree", () => {
+  const cwd = mkdtempSync(path.join(tmpdir(), "cmp-ok-"));
+  try {
+    const store = createPaperStore({ cwd, prefix: "poly_btc_5m_", mode: "dual" });
+    store.appendTrade(tradeFixture());
+    store.appendTrade(tradeFixture({ side: "DOWN", won: false }));
+    store.close();
+    const result = compareStores({ cwd, prefixes: ["poly_btc_5m_"] });
+    assert.equal(result.ok, true);
+    assert.equal(result.bots[0].jsonCount, 2);
+    assert.equal(result.bots[0].sqliteCount, 2);
+  } finally {
+    rmSync(cwd, { recursive: true, force: true });
+  }
+});
+
+test("compareStores flags divergence in counts", () => {
+  const cwd = mkdtempSync(path.join(tmpdir(), "cmp-bad-"));
+  try {
+    const store = createPaperStore({ cwd, prefix: "poly_btc_5m_", mode: "json" });
+    store.appendTrade(tradeFixture());
+    store.close();
+    const result = compareStores({ cwd, prefixes: ["poly_btc_5m_"] });
+    assert.equal(result.ok, false);
   } finally {
     rmSync(cwd, { recursive: true, force: true });
   }
