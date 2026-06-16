@@ -10,6 +10,7 @@
     "start": "node --env-file=.env src/cli.js",
     "test": "node --test",
     "analyze:paper": "node scripts/analyze-paper.js",
+    "import:sqlite": "node scripts/import-json-to-sqlite.js",
     "calibrate": "node scripts/calibrate.js && CALIB_HORIZON=3 node scripts/calibrate.js",
     "validate:calibration": "node scripts/validate-calibration.js",
     "polymarket:btc:5m": "NODE_NO_WARNINGS=1 CANDLE_WINDOW_MINUTES=5 EXECUTE_ORDERS=false PAPER_TRADING=true PAPER_LOG_PREFIX=${PAPER_LOG_PREFIX:-poly_btc_5m_} node --env-file=.env src/index.js",

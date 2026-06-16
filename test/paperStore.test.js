@@ -4,6 +4,8 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import test from "node:test";
 import { createPaperStore } from "../src/execution/paperStore.js";
+import { importJsonToSqlite } from "../scripts/import-json-to-sqlite.js";
+import { mkdirSync, writeFileSync as wf } from "node:fs";
 
 function tradeFixture(overrides = {}) {
   return {
@@ -75,6 +77,22 @@ test("position save/load round-trips in sqlite mode", () => {
       bestAskAtEntry: 0.51, spreadAtEntry: 0.02, feeAtEntry: 0.02 };
     store.savePosition(pos);
     assert.deepEqual(store.loadPosition(), pos);
+    store.close();
+  } finally {
+    rmSync(cwd, { recursive: true, force: true });
+  }
+});
+
+test("importer backfills JSON trades and is idempotent", () => {
+  const cwd = mkdtempSync(path.join(tmpdir(), "import-"));
+  try {
+    mkdirSync(path.join(cwd, "logs"), { recursive: true });
+    wf(path.join(cwd, "logs", "poly_btc_5m_paper_trades.json"),
+       JSON.stringify({ trades: [tradeFixture(), tradeFixture({ side: "DOWN", won: false })] }));
+    importJsonToSqlite({ cwd, prefixes: ["poly_btc_5m_"] });
+    importJsonToSqlite({ cwd, prefixes: ["poly_btc_5m_"] }); // second run must not duplicate
+    const store = createPaperStore({ cwd, prefix: "poly_btc_5m_", mode: "sqlite" });
+    assert.equal(store.loadHistory().trades.length, 2);
     store.close();
   } finally {
     rmSync(cwd, { recursive: true, force: true });

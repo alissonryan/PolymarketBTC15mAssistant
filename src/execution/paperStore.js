@@ -195,6 +195,11 @@ export function createPaperStore({
       return db().prepare("SELECT count(*) c FROM trades WHERE bot_id = ?").get(botId).c;
     },
 
+    clearBot() {
+      db().prepare("DELETE FROM trades WHERE bot_id = ?").run(botId);
+      db().prepare("DELETE FROM positions WHERE bot_id = ?").run(botId);
+    },
+
     close() { if (_db) { _db.close(); _db = null; } }
   };
 }
