@@ -10,6 +10,7 @@
     "start": "node --env-file=.env src/cli.js",
     "test": "node --test",
     "analyze:paper": "node scripts/analyze-paper.js",
+    "stats": "node scripts/stats.mjs",
     "import:sqlite": "node scripts/import-json-to-sqlite.js",
     "compare:stores": "node scripts/compare-stores.js",
     "calibrate": "node scripts/calibrate.js && CALIB_HORIZON=3 node scripts/calibrate.js",
