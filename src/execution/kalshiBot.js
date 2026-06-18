@@ -26,12 +26,20 @@ function demoOn() {
   return (process.env.KALSHI_DEMO ?? "false").toLowerCase() === "true";
 }
 
+function demoFlag() {
+  return (process.env.KALSHI_DEMO ?? "").toLowerCase();
+}
+
 async function ensureInit() {
   if (_initialized) return !_initError;
   _initialized = true;
   try {
     const balance = await _deps.account.getBalanceDollars();
     if (!demoOn()) {
+      if (demoFlag() !== "false") {
+        _initError = "KALSHI_DEMO_deve_ser_true_para_demo_ou_false_para_live";
+        return false;
+      }
       if ((process.env.KALSHI_LIVE_CONFIRM ?? "false").toLowerCase() !== "true") {
         _initError = "live_confirm_ausente_KALSHI_LIVE_CONFIRM_nao_e_true";
         return false;
@@ -161,11 +169,7 @@ async function _settle(pos) {
 }
 
 export async function emergencyShutdown() {
-  try {
-    if (_deps.position.hasOpenPosition()) _deps.position.closePosition();
-  } catch {
-    // ignore
-  }
+  return { preservedPosition: _deps.position.hasOpenPosition() };
 }
 
 export function getKalshiBotStatus() {

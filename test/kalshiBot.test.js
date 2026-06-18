@@ -2,8 +2,9 @@ import { test, beforeEach } from "node:test";
 import assert from "node:assert/strict";
 
 let bot;
+let importSeq = 0;
 async function freshBot() {
-  bot = await import(`../src/execution/kalshiBot.js?ts=${Date.now()}`);
+  bot = await import(`../src/execution/kalshiBot.js?ts=${Date.now()}-${++importSeq}`);
   return bot;
 }
 
@@ -65,6 +66,20 @@ test("blocks when production lacks KALSHI_LIVE_CONFIRM", async () => {
   assert.match(r.reason, /live_confirm|saldo|balance/i);
 });
 
+test("blocks live mode unless KALSHI_DEMO is explicitly false", async () => {
+  delete process.env.KALSHI_DEMO;
+  process.env.KALSHI_LIVE_CONFIRM = "true";
+  await freshBot();
+  bot.__setDeps({
+    account: { getBalanceDollars: async () => 100, getPosition: async () => null, getSettlement: async () => null },
+    orders: { placeFokBuy: async () => { throw new Error("should not be called"); }, dollarsToCents: (d) => Math.ceil(d * 100) },
+    position: makeMemPosition()
+  });
+  const r = await bot.onKalshiSignal({ rec: enterUp, snap: baseSnap, priceToBeat: 65000, timeLeftMin: 10 });
+  assert.equal(r.mode, "blocked");
+  assert.match(r.reason, /KALSHI_DEMO/);
+});
+
 test("blocks entry when count < 1 contract", async () => {
   process.env.RISK_ORDER_SIZE_USDC = "0.50";
   await freshBot();
@@ -100,6 +115,18 @@ test("settles a win from the real account on ticker change", async () => {
   assert.equal(r.won, true);
   assert.ok(Math.abs(r.pnl - 3.1) < 1e-6);
   assert.equal(pos.hasOpenPosition(), false);
+});
+
+test("emergencyShutdown preserves open real position for restart reconciliation", async () => {
+  await freshBot();
+  const pos = makeMemPosition();
+  pos.openPosition({
+    side: "yes", ticker: "KXBTC15M-A", orderId: "o1", count: 8,
+    entryPriceDollars: 0.60, feeDollars: 0.1, marketSlug: "KXBTC15M-A", priceToBeat: 65000, balanceBefore: 100
+  });
+  bot.__setDeps({ position: pos });
+  await bot.emergencyShutdown();
+  assert.equal(pos.hasOpenPosition(), true);
 });
 
 function makeMemPosition() {
