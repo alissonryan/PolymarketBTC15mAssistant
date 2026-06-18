@@ -1,23 +1,39 @@
 import crypto from "node:crypto";
 import fs from "node:fs";
 
+const API_PREFIX = "/trade-api/v2";
 const BASE_URL = process.env.KALSHI_DEMO === "true"
-  ? "https://external-api.demo.kalshi.co/trade-api/v2"
-  : "https://external-api.kalshi.com/trade-api/v2";
+  ? "https://external-api.demo.kalshi.co"
+  : "https://external-api.kalshi.com";
 
 function loadPrivateKey() {
-  const keyPath = process.env.KALSHI_PRIVATE_KEY_PATH;
-  const keyInline = process.env.KALSHI_PRIVATE_KEY;
+  const useDemo = process.env.KALSHI_DEMO === "true";
+  const keyInline = useDemo
+    ? (process.env.KALSHI_DEMO_PRIVATE_KEY ?? process.env.KALSHI_PRIVATE_KEY)
+    : process.env.KALSHI_PRIVATE_KEY;
+  const keyPath = useDemo
+    ? (process.env.KALSHI_DEMO_PRIVATE_KEY_PATH ?? process.env.KALSHI_PRIVATE_KEY_PATH)
+    : process.env.KALSHI_PRIVATE_KEY_PATH;
   if (keyInline) return keyInline.replace(/\\n/g, "\n");
   if (keyPath) return fs.readFileSync(keyPath, "utf8");
   return null;
 }
 
-function kalshiHeaders(method, path) {
-  const apiKeyId = process.env.KALSHI_API_KEY_ID;
+function apiKeyId() {
+  return process.env.KALSHI_DEMO === "true"
+    ? (process.env.KALSHI_DEMO_API_KEY_ID ?? process.env.KALSHI_API_KEY_ID)
+    : process.env.KALSHI_API_KEY_ID;
+}
+
+function apiPath(path) {
+  return path.startsWith(API_PREFIX) ? path : `${API_PREFIX}${path.startsWith("/") ? "" : "/"}${path}`;
+}
+
+export function kalshiSignedHeaders(method, path) {
+  const keyId = apiKeyId();
   const privateKey = loadPrivateKey();
 
-  if (!apiKeyId || !privateKey) {
+  if (!keyId || !privateKey) {
     throw new Error("KALSHI_API_KEY_ID e KALSHI_PRIVATE_KEY (ou KALSHI_PRIVATE_KEY_PATH) são obrigatórios");
   }
 
@@ -32,18 +48,37 @@ function kalshiHeaders(method, path) {
 
   return {
     "Content-Type": "application/json",
-    "KALSHI-ACCESS-KEY": apiKeyId,
+    "KALSHI-ACCESS-KEY": keyId,
     "KALSHI-ACCESS-SIGNATURE": signature,
     "KALSHI-ACCESS-TIMESTAMP": timestampMs
   };
 }
 
-async function kalshiGet(path) {
-  const headers = kalshiHeaders("GET", path);
-  const res = await fetch(`${BASE_URL}${path}`, { headers });
+const kalshiHeaders = kalshiSignedHeaders;
+
+export function kalshiBaseUrl() { return BASE_URL; }
+
+export async function kalshiGet(path) {
+  const fullPath = apiPath(path);
+  const headers = kalshiHeaders("GET", fullPath);
+  const res = await fetch(`${BASE_URL}${fullPath}`, { headers });
   if (!res.ok) {
     const body = await res.text().catch(() => "");
     throw new Error(`Kalshi API ${res.status}: ${body.slice(0, 200)}`);
+  }
+  return res.json();
+}
+
+export async function kalshiPost(path, body) {
+  const fullPath = apiPath(path);
+  const res = await fetch(`${BASE_URL}${fullPath}`, {
+    method: "POST",
+    headers: kalshiHeaders("POST", fullPath),
+    body: JSON.stringify(body)
+  });
+  if (!res.ok) {
+    const text = await res.text().catch(() => "");
+    throw new Error(`Kalshi API ${res.status}: ${text.slice(0, 300)}`);
   }
   return res.json();
 }

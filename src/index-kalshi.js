@@ -15,6 +15,7 @@ import { computeEdge, decide } from "./engines/edge.js";
 import { TimePriceConvergence } from "./engines/timePriceField.js";
 import { LockStrategy } from "./engines/lockStrategy.js";
 import { acquirePaperLock, releasePaperLock, onPaperTick, getPaperStats, getPaperPosition } from "./execution/paperTrading.js";
+import { onKalshiSignal, getKalshiBotStatus, emergencyShutdown } from "./execution/kalshiBot.js";
 import { appendCsvRow, sleep, formatNumber, formatPct } from "./utils.js";
 import { applyGlobalProxyFromEnv } from "./net/proxy.js";
 import readline from "node:readline";
@@ -294,6 +295,18 @@ async function main() {
         })
         : null;
 
+      let realResult = { mode: "monitor" };
+      try {
+        realResult = await onKalshiSignal({
+          rec: recAdapted,
+          snap,
+          priceToBeat,
+          timeLeftMin: timeLeftMin0
+        });
+      } catch (e) {
+        realResult = { mode: "error", reason: e.message };
+      }
+
       const paperStats = PAPER_MODE ? getPaperStats() : null;
       const paperPos   = PAPER_MODE ? getPaperPosition() : null;
 
@@ -343,6 +356,9 @@ async function main() {
           ? `${ANSI.gray}Nenhum ainda${ANSI.reset}`
           : `${paperStats.totalTrades} | ${ANSI.green}${paperStats.wins}W${ANSI.reset} / ${ANSI.red}${paperStats.losses}L${ANSI.reset} | WR ${(paperStats.winRate ?? 0).toFixed(1)}%`) : null,
         paperStats?.totalTrades > 0 ? kv("P&L:", `${pnlColor}${paperStats.totalPnl >= 0 ? "+" : ""}$${paperStats.totalPnl.toFixed(2)} (ROI ${paperStats.roi >= 0 ? "+" : ""}${paperStats.roi}%)${ANSI.reset}`) : null,
+        getKalshiBotStatus().executeOrders
+          ? kv("REAL:", `${realResult.mode}${realResult.reason ? ` (${realResult.reason})` : ""}${getKalshiBotStatus().demo ? " [DEMO]" : " [LIVE]"}`)
+          : null,
         "",
         sep(),
         `${ANSI.dim}${ANSI.gray}kalshi paper trading — série ${SERIES}${ANSI.reset}`
@@ -385,7 +401,7 @@ async function main() {
   }
 }
 
-process.on("SIGINT",  () => { console.log("\n[kalshi] Encerrando..."); process.exit(0); });
-process.on("SIGTERM", () => process.exit(0));
+process.on("SIGINT",  async () => { console.log("\n[kalshi] Encerrando..."); try { await emergencyShutdown(); } catch { /* ignore */ } process.exit(0); });
+process.on("SIGTERM", async () => { try { await emergencyShutdown(); } catch { /* ignore */ } process.exit(0); });
 
 main();
