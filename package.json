@@ -18,6 +18,7 @@
     "polymarket:btc:5m": "NODE_NO_WARNINGS=1 CANDLE_WINDOW_MINUTES=5 EXECUTE_ORDERS=false PAPER_TRADING=true PAPER_LOG_PREFIX=${PAPER_LOG_PREFIX:-poly_btc_5m_} node --env-file=.env src/index.js",
     "polymarket:btc:15m": "NODE_NO_WARNINGS=1 CANDLE_WINDOW_MINUTES=15 EXECUTE_ORDERS=false PAPER_TRADING=true RISK_CHOP_THRESHOLD=${RISK_CHOP_THRESHOLD:-45} PAPER_LOG_PREFIX=${PAPER_LOG_PREFIX:-poly_btc_15m_} node --env-file=.env src/index.js",
     "kalshi:btc": "NODE_NO_WARNINGS=1 KALSHI_SERIES=${KALSHI_SERIES:-KXBTC15M} PAPER_LOG_PREFIX=${PAPER_LOG_PREFIX:-kalshi_btc_} node --env-file=.env src/index-kalshi.js",
+    "kalshi:btc:demo": "NODE_NO_WARNINGS=1 EXECUTE_ORDERS=true KALSHI_DEMO=true KALSHI_SERIES=${KALSHI_SERIES:-KXBTC15M} PAPER_LOG_PREFIX=${PAPER_LOG_PREFIX:-kalshi_btc_} node --env-file=.env src/index-kalshi.js",
     "kalshi:eth": "NODE_NO_WARNINGS=1 KALSHI_SERIES=${KALSHI_SERIES:-KXETH15M} PAPER_LOG_PREFIX=${PAPER_LOG_PREFIX:-kalshi_eth_} node --env-file=.env src/index-kalshi.js",
     "kalshi:sol": "NODE_NO_WARNINGS=1 KALSHI_SERIES=${KALSHI_SERIES:-KXSOL15M} PAPER_LOG_PREFIX=${PAPER_LOG_PREFIX:-kalshi_sol_} node --env-file=.env src/index-kalshi.js"
   },

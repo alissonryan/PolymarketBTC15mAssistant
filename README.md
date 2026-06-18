@@ -554,3 +554,40 @@ If a bot crashed without releasing its lock: `rm logs/<prefix>paper.lock`
 ## Safety
 
 This is not financial advice. Binary prediction markets are adversarial, spread-sensitive, and time-sensitive. The calibrated model shows statistical edge in backtesting, but past performance does not guarantee future results. Keep `EXECUTE_ORDERS=false` until paper results are positive and stable across different market regimes.
+
+---
+
+## Kalshi execução real (demo-first)
+
+Real execution is disabled by default. With `EXECUTE_ORDERS=false`, the Kalshi bot keeps the same paper-only behavior and does not show the `REAL:` status line.
+
+Required flags and credentials:
+
+| Variable | Purpose |
+|----------|---------|
+| `EXECUTE_ORDERS` | Must be `true` to enable the real-execution path. Default is `false`. |
+| `KALSHI_DEMO` | Set `true` for demo trading. Set `false` only for the future live phase. |
+| `KALSHI_LIVE_CONFIRM` | Must be `true` for live trading when `KALSHI_DEMO=false`. Leave unset for demo. |
+| `KALSHI_DEMO_API_KEY_ID` | Demo API key id. |
+| `KALSHI_DEMO_PRIVATE_KEY_PATH` | Local path to the demo RSA private key PEM. Do not commit this file. |
+| `KALSHI_DEMO_PRIVATE_KEY` | Optional inline demo private key, with newlines escaped as `\\n`. Prefer the path var locally. |
+
+Order behavior:
+
+- Orders are fill-or-kill buys at the Kalshi ask.
+- `UP` maps to `side: "yes"` and `DOWN` maps to `side: "no"`.
+- Prices are integer cents (`yes_price` or `no_price`) and contract count is whole contracts.
+- Sizing reuses `RISK_ORDER_SIZE_USDC`: `count = Math.floor(RISK_ORDER_SIZE_USDC / askDollars)`.
+- If `count < 1`, the bot blocks the entry. It does not introduce any new stake or threshold env vars.
+- Production live execution still needs a separate human gate: `EXECUTE_ORDERS=true`, `KALSHI_DEMO=false`, and `KALSHI_LIVE_CONFIRM=true`.
+
+Demo-first rollout:
+
+1. Generate a Kalshi demo API key and demo RSA private key.
+2. Add only demo variables to your local `.env`, never commit `.env` or `.pem`.
+3. Run `npm run kalshi:btc:demo`.
+4. Confirm demo orders fill, remain FOK-only, persist position state, and settle from the demo account.
+5. Review paper-vs-real logs under `logs/`.
+6. Stop here. Deposits and live flags are a separate production phase with a human approval gate.
+
+Follow-up: drawdown kill-switch tuning beyond `RISK_MAX_DAILY_LOSS_USDC` is intentionally deferred until the exact approved threshold is defined.
