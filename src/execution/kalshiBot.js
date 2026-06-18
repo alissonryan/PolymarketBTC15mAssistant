@@ -34,12 +34,13 @@ async function ensureInit() {
   if (_initialized) return !_initError;
   _initialized = true;
   try {
+    const isDemo = demoOn();
+    if (!isDemo && demoFlag() !== "false") {
+      _initError = "KALSHI_DEMO_deve_ser_true_para_demo_ou_false_para_live";
+      return false;
+    }
     const balance = await _deps.account.getBalanceDollars();
-    if (!demoOn()) {
-      if (demoFlag() !== "false") {
-        _initError = "KALSHI_DEMO_deve_ser_true_para_demo_ou_false_para_live";
-        return false;
-      }
+    if (!isDemo) {
       if ((process.env.KALSHI_LIVE_CONFIRM ?? "false").toLowerCase() !== "true") {
         _initError = "live_confirm_ausente_KALSHI_LIVE_CONFIRM_nao_e_true";
         return false;

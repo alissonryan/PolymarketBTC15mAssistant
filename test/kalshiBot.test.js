@@ -70,14 +70,20 @@ test("blocks live mode unless KALSHI_DEMO is explicitly false", async () => {
   delete process.env.KALSHI_DEMO;
   process.env.KALSHI_LIVE_CONFIRM = "true";
   await freshBot();
+  let balanceCalled = false;
   bot.__setDeps({
-    account: { getBalanceDollars: async () => 100, getPosition: async () => null, getSettlement: async () => null },
+    account: {
+      getBalanceDollars: async () => { balanceCalled = true; return 100; },
+      getPosition: async () => null,
+      getSettlement: async () => null
+    },
     orders: { placeFokBuy: async () => { throw new Error("should not be called"); }, dollarsToCents: (d) => Math.ceil(d * 100) },
     position: makeMemPosition()
   });
   const r = await bot.onKalshiSignal({ rec: enterUp, snap: baseSnap, priceToBeat: 65000, timeLeftMin: 10 });
   assert.equal(r.mode, "blocked");
   assert.match(r.reason, /KALSHI_DEMO/);
+  assert.equal(balanceCalled, false);
 });
 
 test("blocks entry when count < 1 contract", async () => {
