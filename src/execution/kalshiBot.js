@@ -79,7 +79,7 @@ export async function onKalshiSignal({ rec, snap, priceToBeat, timeLeftMin }) {
   }
 
   const side = rec.side === "UP" ? "yes" : "no";
-  const askDollars = side === "yes" ? snap.prices?.yes : snap.prices?.no;
+  const askDollars = rec.side === "UP" ? snap.prices?.yes : snap.prices?.no;
   if (!askDollars || askDollars <= 0) return { mode: "waiting", reason: "preco_kalshi_indisponivel" };
 
   const risk = canTrade({ openPositions: 0, edgeBest: rec.edge ?? 0, tokenPrice: askDollars });
@@ -92,16 +92,15 @@ export async function onKalshiSignal({ rec, snap, priceToBeat, timeLeftMin }) {
   const count = Math.floor(stake / askDollars);
   if (count < 1) return { mode: "blocked", reason: "order_size_menor_que_1_contrato" };
 
-  const limitPriceCents = _deps.orders.dollarsToCents(askDollars);
   const balanceBefore = await _deps.account.getBalanceDollars().catch(() => null);
 
   let result;
   try {
     result = await _deps.orders.placeFokBuy({
       ticker: snap.ticker,
-      side,
+      direction: rec.side,
+      askDollars,
       count,
-      limitPriceCents,
       clientOrderId: `${snap.ticker}-${Date.now()}`
     });
   } catch (err) {
@@ -113,8 +112,9 @@ export async function onKalshiSignal({ rec, snap, priceToBeat, timeLeftMin }) {
   }
 
   _cooldown.recordEntry(rec.side);
-  const entryPriceDollars = result.fillCostDollars != null && count > 0
-    ? result.fillCostDollars / count
+  const avgFill = result.avgFillPriceDollars;
+  const entryPriceDollars = avgFill != null
+    ? parseFloat((rec.side === "UP" ? avgFill : 1 - avgFill).toFixed(4))
     : askDollars;
 
   _deps.position.openPosition({
@@ -123,7 +123,7 @@ export async function onKalshiSignal({ rec, snap, priceToBeat, timeLeftMin }) {
     orderId: result.orderId,
     count,
     entryPriceDollars,
-    feeDollars: result.feesDollars ?? 0,
+    feeDollars: result.avgFeeDollars ?? 0,
     marketSlug: snap.ticker,
     priceToBeat,
     balanceBefore

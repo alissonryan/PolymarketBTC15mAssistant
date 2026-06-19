@@ -80,7 +80,11 @@ export async function kalshiPost(path, body) {
     const text = await res.text().catch(() => "");
     throw new Error(`Kalshi API ${res.status}: ${text.slice(0, 300)}`);
   }
-  return res.json();
+  const data = await res.json();
+  if (data && typeof data === "object") {
+    Object.defineProperty(data, "__httpStatus", { value: res.status, enumerable: false });
+  }
+  return data;
 }
 
 // Returns the most recently opened market for a given series (e.g. KXBTC15M)

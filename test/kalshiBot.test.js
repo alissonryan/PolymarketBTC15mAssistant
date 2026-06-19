@@ -10,6 +10,7 @@ async function freshBot() {
 
 const baseSnap = { ok: true, ticker: "KXBTC15M-A", prices: { yes: 0.60, no: 0.40, yesBid: 0.59, noBid: 0.39 } };
 const enterUp = { action: "ENTER", side: "UP", edge: 0.20 };
+const enterDown = { action: "ENTER", side: "DOWN", edge: 0.20 };
 
 beforeEach(() => {
   process.env.EXECUTE_ORDERS = "true";
@@ -32,7 +33,7 @@ test("monitor mode when EXECUTE_ORDERS is false", async () => {
   assert.equal(r.mode, "monitor");
 });
 
-test("places a FOK yes order sized by floor(stake/ask)", async () => {
+test("places a FOK UP order sized by floor(stake/ask)", async () => {
   await freshBot();
   const placed = [];
   bot.__setDeps({
@@ -40,7 +41,7 @@ test("places a FOK yes order sized by floor(stake/ask)", async () => {
     orders: {
       placeFokBuy: async (a) => {
         placed.push(a);
-        return { orderId: "o1", filled: true, fillCount: a.count, fillCostDollars: a.count * 0.60, feesDollars: 0.1 };
+        return { orderId: "o1", filled: true, fillCount: a.count, avgFillPriceDollars: 0.60, avgFeeDollars: 0.1 };
       },
       dollarsToCents: (d) => Math.ceil(d * 100)
     },
@@ -48,9 +49,35 @@ test("places a FOK yes order sized by floor(stake/ask)", async () => {
   });
   const r = await bot.onKalshiSignal({ rec: enterUp, snap: baseSnap, priceToBeat: 65000, timeLeftMin: 10 });
   assert.equal(r.mode, "entered");
-  assert.equal(placed[0].side, "yes");
+  assert.equal(placed[0].direction, "UP");
+  assert.equal(placed[0].askDollars, 0.60);
   assert.equal(placed[0].count, 8);
-  assert.equal(placed[0].limitPriceCents, 60);
+  assert.equal(placed[0].limitPriceCents, undefined);
+});
+
+test("stores DOWN fill entry as economic NO price from V2 YES ask fill", async () => {
+  const downSnap = { ...baseSnap, prices: { ...baseSnap.prices, no: 0.47, yesBid: 0.53 } };
+  await freshBot();
+  const pos = makeMemPosition();
+  bot.__setDeps({
+    account: { getBalanceDollars: async () => 100, getPosition: async () => null, getSettlement: async () => null },
+    orders: {
+      placeFokBuy: async (a) => {
+        assert.equal(a.direction, "DOWN");
+        assert.equal(a.askDollars, 0.47);
+        return { orderId: "o2", filled: true, fillCount: a.count, avgFillPriceDollars: 0.53, avgFeeDollars: 0.02 };
+      },
+      dollarsToCents: (d) => Math.ceil(d * 100)
+    },
+    position: pos
+  });
+
+  const r = await bot.onKalshiSignal({ rec: enterDown, snap: downSnap, priceToBeat: 65000, timeLeftMin: 10 });
+
+  assert.equal(r.mode, "entered");
+  assert.equal(r.side, "no");
+  assert.equal(r.entryPriceDollars, 0.47);
+  assert.equal(pos.getPosition().entryPriceDollars, 0.47);
 });
 
 test("blocks when production lacks KALSHI_LIVE_CONFIRM", async () => {

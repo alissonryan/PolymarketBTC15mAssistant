@@ -1,6 +1,6 @@
 import { kalshiPost } from "../data/kalshi.js";
 
-const ORDERS_PATH = "/trade-api/v2/portfolio/orders";
+const ORDERS_PATH = "/trade-api/v2/portfolio/events/orders";
 
 export function dollarsToCents(dollars) {
   const cents = Math.ceil(Number(dollars) * 100);
@@ -11,29 +11,39 @@ function num(value) {
   return value == null ? null : Number(value);
 }
 
-export async function placeFokBuy({ ticker, side, count, limitPriceCents, clientOrderId }) {
+function formatPrice(dollars) {
+  const n = Number(dollars);
+  const clamped = Math.max(0.01, Math.min(0.99, n));
+  return clamped.toFixed(4);
+}
+
+function formatCount(count) {
+  return Number(count).toFixed(2);
+}
+
+export async function placeFokBuy({ ticker, direction, askDollars, count, clientOrderId, timeInForce = "fill_or_kill" }) {
+  const side = direction === "UP" ? "bid" : "ask";
+  const priceDollars = direction === "UP" ? Number(askDollars) : 1 - Number(askDollars);
   const body = {
     ticker,
-    action: "buy",
     side,
-    count,
-    time_in_force: "fill_or_kill",
-    ...(side === "yes" ? { yes_price: limitPriceCents } : { no_price: limitPriceCents }),
+    count: formatCount(count),
+    price: formatPrice(priceDollars),
+    time_in_force: timeInForce,
+    self_trade_prevention_type: "taker_at_cross",
     ...(clientOrderId ? { client_order_id: clientOrderId } : {})
   };
 
   const raw = await kalshiPost(ORDERS_PATH, body);
-  const order = raw?.order ?? {};
-  const fillCount = order.fill_count_fp != null
-    ? Math.floor(Number(order.fill_count_fp))
-    : order.fill_count != null ? Number(order.fill_count) : 0;
+  const fillCount = Math.floor(Number(raw?.fill_count ?? "0"));
 
   return {
     raw,
-    orderId: order.order_id ?? order.client_order_id ?? null,
+    httpStatus: raw?.__httpStatus ?? null,
+    orderId: raw?.order_id ?? raw?.client_order_id ?? null,
     fillCount,
     filled: fillCount >= count,
-    fillCostDollars: num(order.taker_fill_cost_dollars),
-    feesDollars: num(order.taker_fees_dollars)
+    avgFillPriceDollars: num(raw?.average_fill_price),
+    avgFeeDollars: num(raw?.average_fee_paid)
   };
 }

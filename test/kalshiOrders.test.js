@@ -34,42 +34,75 @@ test("dollarsToCents ceils and clamps", async () => {
   assert.equal(dollarsToCents(0.999), 99);
 });
 
-test("placeFokBuy posts a FOK yes order and reports a full fill", async () => {
+test("placeFokBuy maps UP buy-YES intent to V2 bid order and reports a full fill", async () => {
   const { placeFokBuy } = await import("../src/execution/kalshiOrders.js");
   stubFetch(201, {
-    order: {
-      order_id: "ord1",
-      fill_count_fp: "8.00",
-      taker_fill_cost_dollars: "4.8000",
-      taker_fees_dollars: "0.1200"
-    }
+    order_id: "ord1",
+    client_order_id: "c1",
+    fill_count: "8.00",
+    remaining_count: "0.00",
+    average_fill_price: "0.5400",
+    average_fee_paid: "0.1200"
   });
 
   const r = await placeFokBuy({
-    ticker: "KXBTC15M-X", side: "yes", count: 8,
-    limitPriceCents: 61, clientOrderId: "c1"
+    ticker: "KXBTC15M-X", direction: "UP", askDollars: 0.54, count: 8, clientOrderId: "c1"
   });
 
+  assert.match(calls[0].url, /\/trade-api\/v2\/portfolio\/events\/orders$/);
   const body = calls[0].body;
   assert.equal(body.ticker, "KXBTC15M-X");
-  assert.equal(body.action, "buy");
-  assert.equal(body.side, "yes");
-  assert.equal(body.count, 8);
-  assert.equal(body.yes_price, 61);
+  assert.equal(body.action, undefined);
+  assert.equal(body.side, "bid");
+  assert.equal(body.count, "8.00");
+  assert.equal(body.price, "0.5400");
   assert.equal(body.time_in_force, "fill_or_kill");
+  assert.equal(body.self_trade_prevention_type, "taker_at_cross");
   assert.equal(body.client_order_id, "c1");
+  assert.equal(body.yes_price, undefined);
+  assert.equal(body.no_price, undefined);
   assert.equal(r.orderId, "ord1");
+  assert.equal(r.httpStatus, 201);
   assert.equal(r.fillCount, 8);
   assert.equal(r.filled, true);
-  assert.equal(r.fillCostDollars, 4.8);
-  assert.equal(r.feesDollars, 0.12);
+  assert.equal(r.avgFillPriceDollars, 0.54);
+  assert.equal(r.avgFeeDollars, 0.12);
 });
 
-test("placeFokBuy reports not-filled on a partial/zero fill", async () => {
+test("placeFokBuy maps DOWN buy-NO intent to V2 ask at one minus noAsk", async () => {
   const { placeFokBuy } = await import("../src/execution/kalshiOrders.js");
-  stubFetch(201, { order: { order_id: "ord2", fill_count_fp: "0.00" } });
-  const r = await placeFokBuy({ ticker: "T", side: "no", count: 5, limitPriceCents: 40 });
-  assert.equal(calls[0].body.no_price, 40);
+  stubFetch(201, {
+    order_id: "ord2",
+    fill_count: "0.00",
+    remaining_count: "5.00"
+  });
+
+  const r = await placeFokBuy({ ticker: "T", direction: "DOWN", askDollars: 0.47, count: 5 });
+
+  const body = calls[0].body;
+  assert.equal(body.side, "ask");
+  assert.equal(body.price, "0.5300");
+  assert.notEqual(body.price, "0.4700");
+  assert.equal(body.count, "5.00");
   assert.equal(r.filled, false);
   assert.equal(r.fillCount, 0);
+});
+
+test("placeFokBuy allows time_in_force override for demo mechanics checks", async () => {
+  const { placeFokBuy } = await import("../src/execution/kalshiOrders.js");
+  stubFetch(201, { order_id: "ord3", fill_count: "0.00", remaining_count: "1.00" });
+
+  await placeFokBuy({ ticker: "T", direction: "UP", askDollars: 0.01, count: 1, timeInForce: "immediate_or_cancel" });
+
+  assert.equal(calls[0].body.time_in_force, "immediate_or_cancel");
+});
+
+test("placeFokBuy surfaces Kalshi 4xx errors cleanly", async () => {
+  const { placeFokBuy } = await import("../src/execution/kalshiOrders.js");
+  stubFetch(410, { error: { code: "deprecated_v1_order_endpoint" } });
+
+  await assert.rejects(
+    placeFokBuy({ ticker: "T", direction: "UP", askDollars: 0.01, count: 1 }),
+    /Kalshi API 410.*deprecated_v1_order_endpoint/
+  );
 });
