@@ -29,7 +29,9 @@ const sinceArg = (() => {
 const CLEAN_FLOOR = "2026-06-13";
 const since = ALL ? "0000" : (sinceArg ?? CLEAN_FLOOR);
 
-const BOTS = ["poly_btc_5m", "poly_btc_15m", "kalshi_btc"];
+// kalshi_btc_real = real-execution path (demo or live money), written by kalshiBot.
+// Shown alongside kalshi_btc (paper) so you can eyeball real-vs-paper directly.
+const BOTS = ["poly_btc_5m", "poly_btc_15m", "kalshi_btc", "kalshi_btc_real"];
 
 let db;
 try {
